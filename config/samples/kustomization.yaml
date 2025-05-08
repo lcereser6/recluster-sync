@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- recluster_v1alpha1_rcnode.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

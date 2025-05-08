@@ -1,0 +1,9 @@
+apiVersion: recluster.recluster.com/v1alpha1
+kind: Rcnode
+metadata:
+  labels:
+    app.kubernetes.io/name: recluster-sync
+    app.kubernetes.io/managed-by: kustomize
+  name: rcnode-sample
+spec:
+  # TODO(user): Add fields here
