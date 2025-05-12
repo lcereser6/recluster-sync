@@ -32,7 +32,7 @@ helm install ca $HOME/src/autoscaler-recluster/charts/cluster-autoscaler \
   --set autoDiscovery.clusterName=kind \
   --set autoDiscovery.enabled=true \
   --set extraArgs.cluster-name=kind \
-  --set extraArgs.cloud-provider=recluster
+  --set cloudProvider=recluster \
 
 echo "↻ Deploying recluster-sync controller (KWOK mode)"
 helm install sync $HOME/src/recluster-sync/charts \
