@@ -49,9 +49,9 @@ func (b *kwokBackend) Reconcile(ctx context.Context, rc *rcv1.Rcnode) error {
 	}
 
 	switch {
-	//----------------------------------------------------------------------
+	// ----------------------------------------------------------------------
 	// 1) Rcnode says it should run  ►  ensure Node exists & Ready=True
-	//----------------------------------------------------------------------
+	// ----------------------------------------------------------------------
 	case wantRunning:
 		if isNotFound(err) {
 			// create brand-new node
@@ -64,9 +64,9 @@ func (b *kwokBackend) Reconcile(ctx context.Context, rc *rcv1.Rcnode) error {
 		// exists – patch ProviderID + Ready=True if needed
 		return b.ensureReady(ctx, node, providerID)
 
-	//----------------------------------------------------------------------
+	// ----------------------------------------------------------------------
 	// 2) Rcnode wants it stopped  ►  delete Node if present
-	//----------------------------------------------------------------------
+	// ----------------------------------------------------------------------
 	default:
 		if isNotFound(err) {
 			return nil // nothing to do
