@@ -1,4 +1,4 @@
-apiVersion: recluster.recluster.com/v1alpha1
+apiVersion: recluster.com/v1alpha1
 kind: Rcnode
 metadata:
   labels:

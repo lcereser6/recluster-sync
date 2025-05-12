@@ -40,8 +40,6 @@ spec:
             description: RcnodeSpec defines the desired state of Rcnode.
             properties:
               cpuCores:
-                description: Foo is an example field of Rcnode. Edit rcnode_types.go
-                  to remove/update
                 type: integer
               desiredState:
                 type: string

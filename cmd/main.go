@@ -56,6 +56,8 @@ func init() {
 
 // nolint:gocyclo
 func main() {
+
+	setupLog := ctrl.Log.WithName("INITIALIZING SETUP OF RECLUSTER-SYNC CONTROLLER")
 	var metricsAddr string
 	var metricsCertPath, metricsCertName, metricsCertKey string
 	var webhookCertPath, webhookCertName, webhookCertKey string

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpu-hog
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hog
+  template:
+    metadata:
+      labels:
+        app: hog
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: stress
+          image: polinux/stress          # <- contains /usr/bin/stress
+          command: ["stress"]            # entrypoint is busybox’s sh; be explicit
+          args: ["--cpu", "4", "--timeout", "180s"]
+          resources:
+            requests:
+              cpu: "3500m"
+            limits:
+              cpu: "3500m"

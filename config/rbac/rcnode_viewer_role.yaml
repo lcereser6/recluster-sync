@@ -1,7 +1,7 @@
 # This rule is not used by the project recluster-sync itself.
 # It is provided to allow the cluster admin to help manage permissions for users.
 #
-# Grants read-only access to recluster.recluster.com resources.
+# Grants read-only access to recluster.com resources.
 # This role is intended for users who need visibility into these resources
 # without permissions to modify them. It is ideal for monitoring purposes and limited-access viewing.
 
@@ -14,7 +14,7 @@ metadata:
   name: rcnode-viewer-role
 rules:
 - apiGroups:
-  - recluster.recluster.com
+  - recluster.com
   resources:
   - rcnodes
   verbs:
@@ -22,7 +22,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - recluster.recluster.com
+  - recluster.com
   resources:
   - rcnodes/status
   verbs:

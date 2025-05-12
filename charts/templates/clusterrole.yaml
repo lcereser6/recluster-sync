@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "recluster-sync.fullname" . }}
+rules:
+  # ► watch / manage Rcnode CRDs
+  - apiGroups: ["recluster.com"]
+    resources: ["rcnodes", "rcnodes/status"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  # ► KWOK back-end needs to patch Nodes / NodeTemplates
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/status"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: ["kwok.x-k8s.io"]
+    resources: ["nodetemplates"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]

@@ -33,9 +33,9 @@ type RcnodeReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=recluster.recluster.com,resources=rcnodes,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=recluster.recluster.com,resources=rcnodes/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=recluster.recluster.com,resources=rcnodes/finalizers,verbs=update
+// +kubebuilder:rbac:groups=recluster.com,resources=rcnodes,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=recluster.com,resources=rcnodes/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=recluster.com,resources=rcnodes/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
