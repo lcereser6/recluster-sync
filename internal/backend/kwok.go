@@ -42,6 +42,7 @@ func (b *kwokBackend) Reconcile(ctx context.Context, rc *rcv1.Rcnode) error {
 	nodeName := templateNodeName(rc) // "kwok-fake-<rcname>"
 	providerID := fmt.Sprintf("recluster://%s", rc.Name)
 
+	klog.Infof("KWOK: reconcile Rcnode %q (%s) -> %q", rc.Name, rc.Spec.DesiredState, nodeName)
 	// does the Node already exist?
 	node, err := b.core.Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil && !isNotFound(err) {
@@ -82,13 +83,14 @@ func (b *kwokBackend) Reconcile(ctx context.Context, rc *rcv1.Rcnode) error {
 func buildKwokNode(rc *rcv1.Rcnode, nodeName, providerID string) *corev1.Node {
 	cpuMillicores := rc.Spec.CPUCores * 1000
 	memBytes := int64(rc.Spec.MemoryGiB) * 1024 * 1024 * 1024
-
+	klog.Infof("KWOK: creating fake node (Rcnode %q wants %d cores, %d GiB)", rc.Name, rc.Spec.CPUCores, rc.Spec.MemoryGiB)
 	return &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: nodeName,
 			Labels: map[string]string{
 				"kubernetes.io/cores": fmt.Sprintf("%d", rc.Spec.CPUCores), // "amd64" or "arm64"
 				"kubernetes.io/os":    "linux",
+				"kubernetes.io/arch":  "amd64",
 			},
 			Annotations: map[string]string{
 				kwokManagedAnnotation: "fake",
@@ -96,11 +98,6 @@ func buildKwokNode(rc *rcv1.Rcnode, nodeName, providerID string) *corev1.Node {
 		},
 		Spec: corev1.NodeSpec{
 			ProviderID: providerID,
-			Taints: []corev1.Taint{{
-				Key:    "kwok-provider",
-				Value:  "true",
-				Effect: corev1.TaintEffectNoSchedule,
-			}},
 		},
 		Status: corev1.NodeStatus{
 			Capacity: corev1.ResourceList{

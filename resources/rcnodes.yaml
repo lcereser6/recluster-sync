@@ -1,0 +1,26 @@
+apiVersion: recluster.com/v1alpha1
+kind: Rcnode
+metadata:
+  name: smoke-1
+spec:
+  cpuCores: 4
+  memoryGiB: 8
+  desiredState: Stopped
+---
+apiVersion: recluster.com/v1alpha1
+kind: Rcnode
+metadata:
+  name: smoke-2
+spec:
+  cpuCores: 4
+  memoryGiB: 8
+  desiredState: Stopped
+---
+apiVersion: recluster.com/v1alpha1
+kind: Rcnode
+metadata:
+  name: smoke-3
+spec:
+  cpuCores: 4
+  memoryGiB: 8
+  desiredState: Stopped

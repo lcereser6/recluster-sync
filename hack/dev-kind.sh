@@ -14,8 +14,11 @@ kind delete cluster || true
 kind create cluster --image "kindest/node:${KIND_VER}"
 
 echo "↻ Installing KWOK ${KWOK_VER}"
-curl -sL "https://github.com/kubernetes-sigs/kwok/releases/download/${KWOK_VER}/kwok.yaml"        | kubectl apply -f -
-curl -sL "https://github.com/kubernetes-sigs/kwok/releases/download/${KWOK_VER}/stage-fast.yaml" | kubectl apply -f -
+helm repo add kwok https://kwok.sigs.k8s.io/charts/
+helm upgrade --namespace kube-system --install kwok1 kwok/kwok
+helm upgrade --install kwok2 kwok/stage-fast
+helm upgrade --install kwok3 kwok/metrics-usage
+
 
 echo "↻ Loading dev images into kind"
 kind load docker-image "${CA_IMAGE}"
@@ -23,6 +26,8 @@ kind load docker-image "${RC_SYNC_IMAGE}"
 
 echo "↻ Applying Rcnode CRD"
 kubectl apply -f $HOME/src/recluster-sync/config/crd/bases
+
+kubectl apply -f $HOME/src/recluster-sync/resources/rcnodes.yaml   
 
 echo "↻ Deploying Cluster-Autoscaler"
 helm install ca $HOME/src/autoscaler-recluster/charts/cluster-autoscaler \
@@ -33,6 +38,10 @@ helm install ca $HOME/src/autoscaler-recluster/charts/cluster-autoscaler \
   --set autoDiscovery.enabled=true \
   --set extraArgs.cluster-name=kind \
   --set cloudProvider=recluster \
+  --set scale-down-enabled=true \
+  --set scale-down-unneeded-time=30s \
+  --set scale-down-delay-after-add=30s \
+  --set scale-down-delay-after-failure=30s \
 
 echo "↻ Deploying recluster-sync controller (KWOK mode)"
 helm install sync $HOME/src/recluster-sync/charts \
