@@ -1,8 +1,5 @@
 module github.com/lcereser6/recluster-sync
 
-
-godebug default=go1.23
-
 require (
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
