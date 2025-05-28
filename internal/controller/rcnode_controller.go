@@ -25,12 +25,14 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/api/v1alpha1"
+	"github.com/lcereser6/recluster-sync/internal/state"
 )
 
 // RcnodeReconciler reconciles a Rcnode object
 type RcnodeReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	State  state.State // ← NEW
 }
 
 // +kubebuilder:rbac:groups=recluster.com,resources=rcnodes,verbs=get;list;watch;create;update;patch;delete

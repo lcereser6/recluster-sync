@@ -39,6 +39,8 @@ spec:
           spec:
             description: RcnodeSpec defines the desired state of Rcnode.
             properties:
+              bootSeconds:
+                type: integer
               cpuCores:
                 type: integer
               desiredState:

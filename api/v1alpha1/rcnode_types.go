@@ -30,6 +30,7 @@ type RcnodeSpec struct {
 
 	CPUCores     int    `json:"cpuCores"`
 	MemoryGiB    int    `json:"memoryGiB"`
+	BootSeconds  int    `json:"bootSeconds,omitempty"`  // 0 = powered off, >0 = booting
 	DesiredState string `json:"desiredState,omitempty"` // "", "Running", "Stopped"
 	Foo          string `json:"foo,omitempty"`
 }

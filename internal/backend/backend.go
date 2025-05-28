@@ -20,7 +20,7 @@ type Backend interface {
 // Factory helper – returns the concrete impl selected by MODE env var
 // -----------------------------------------------------------------------------
 func New(mode string, k8s kubernetes.Interface) (Backend, error) {
-	//log
+	//loga
 	klog.Infof("Backend used: %q", mode)
 	switch mode {
 	case "kwok":
