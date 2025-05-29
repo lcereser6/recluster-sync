@@ -1,0 +1,18 @@
+apiVersion: recluster.com/v1alpha1
+kind: RcPolicy
+metadata:
+  name: fast-boot
+spec:
+  # Any pod with this label will be matched
+  selector:
+    matchLabels:
+      power: turbo
+  # “Boot time is king”: minimise BootSeconds, then CPU
+  metrics:
+    - key: boot       # Rcnode.spec.bootSeconds
+      weight:  1.0
+    - key: cpu        # Rcnode.spec.cpuCores
+      weight:  0.2    # small tie-breaker
+  # Hard constraint – only allow nodes under 5 GiB RAM
+  hardConstraints:
+    - expression: ram < 5

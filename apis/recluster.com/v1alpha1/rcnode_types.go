@@ -1,3 +1,4 @@
+// rcnode_types.go
 /*
 Copyright 2025.
 
@@ -20,10 +21,27 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// +genclient
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// RcnodeSpec defines the desired state of Rcnode.
+type Rcnode struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   RcnodeSpec   `json:"spec,omitempty"`
+	Status RcnodeStatus `json:"status,omitempty"`
+}
+
+// RcnodeList contains a list of Rcnode.
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type RcnodeList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Rcnode `json:"items"`
+}
+
 type RcnodeSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -35,32 +53,10 @@ type RcnodeSpec struct {
 	Foo          string `json:"foo,omitempty"`
 }
 
-// RcnodeStatus defines the observed state of Rcnode.
 type RcnodeStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	State string `json:"state,omitempty"` // "", "Running", "Stopped"
-}
-
-// +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
-
-// Rcnode is the Schema for the rcnodes API.
-type Rcnode struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   RcnodeSpec   `json:"spec,omitempty"`
-	Status RcnodeStatus `json:"status,omitempty"`
-}
-
-// +kubebuilder:object:root=true
-
-// RcnodeList contains a list of Rcnode.
-type RcnodeList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Rcnode `json:"items"`
 }
 
 func init() {

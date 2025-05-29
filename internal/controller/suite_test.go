@@ -32,7 +32,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/api/v1alpha1"
+	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

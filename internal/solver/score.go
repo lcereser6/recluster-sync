@@ -8,7 +8,7 @@ import (
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/checker/decls"
 
-	rcv1 "github.com/lcereser6/recluster-sync/api/v1alpha1"
+	rcv1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
 )
 
 /* -------------------------------------------------------------------------- */

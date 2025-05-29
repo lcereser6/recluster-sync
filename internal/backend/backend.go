@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	rcv1 "github.com/lcereser6/recluster-sync/api/v1alpha1"
+	rcv1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 )

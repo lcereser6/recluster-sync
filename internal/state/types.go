@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	rcv1 "github.com/lcereser6/recluster-sync/api/v1alpha1"
+	rcv1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"

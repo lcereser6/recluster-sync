@@ -27,7 +27,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/api/v1alpha1"
+	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
 )
 
 var _ = Describe("Rcnode Controller", func() {

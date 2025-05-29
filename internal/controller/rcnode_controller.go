@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/api/v1alpha1"
+	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
 	"github.com/lcereser6/recluster-sync/internal/state"
 )
 

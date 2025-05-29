@@ -1,3 +1,5 @@
+//rcpolicy_types.go
+
 package v1alpha1
 
 import (
@@ -5,12 +7,10 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-// ----------------------------------------------------------------------------
-// RcPolicy CRD
-// ----------------------------------------------------------------------------
+// +genclient
 
-// +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type RcPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -47,15 +47,11 @@ type PolicyMetric struct {
 }
 
 type PolicyConstraint struct {
-	// CEL expression that must evaluate to true on a candidate assignment.
+	// CEL expression that must evaluate to true on a candidafalte assignment.
 	Expression string `json:"expression"`
 }
 
-// ---------------------------------------------------------------------------
-// Status
-// ---------------------------------------------------------------------------
-
-// +kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type RcPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -78,4 +74,8 @@ func (p *RcPolicy) CompiledSelector() (labels.Selector, error) {
 		return labels.Everything(), nil
 	}
 	return metav1.LabelSelectorAsSelector(p.Spec.Selector)
+}
+
+func init() {
+	SchemeBuilder.Register(&RcPolicy{}, &RcPolicyList{})
 }

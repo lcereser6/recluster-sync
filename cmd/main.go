@@ -30,7 +30,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/api/v1alpha1"
+	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
 	"github.com/lcereser6/recluster-sync/internal/controller"
 	"github.com/lcereser6/recluster-sync/internal/state" // *** NEW ***
 )
@@ -46,7 +46,7 @@ func init() {
 }
 
 func main() {
-	log := ctrl.Log.WithName("setup")
+	log := ctrl.Log.WithName("setup 35")
 
 	/* ------------------------- CLI flags -------------------------- */
 

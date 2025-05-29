@@ -29,6 +29,8 @@ kubectl apply -f $HOME/src/recluster-sync/config/crd/bases
 
 kubectl apply -f $HOME/src/recluster-sync/resources/rcnodes.yaml   
 
+
+
 echo "↻ Deploying Cluster-Autoscaler"
 helm install ca $HOME/src/autoscaler-recluster/charts/cluster-autoscaler \
   --namespace kube-system --create-namespace \

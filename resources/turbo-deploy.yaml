@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: turbo-echo
+  labels:
+    power: turbo          # ← matches policy selector
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: turbo-echo
+  template:
+    metadata:
+      labels:
+        app: turbo-echo
+        power: turbo
+      annotations:                    # ← **NEW** pod hints
+        recluster.io/policy: fast-boot
+    spec:
+      # Make them unschedulable until Rc-sync relaxes the taint
+      tolerations:
+        - key: "recluster.io/pending"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: echo
+          image: mendhak/http-https-echo
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "50Mi"

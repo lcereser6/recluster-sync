@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"sync"
 
-	rcv1 "github.com/lcereser6/recluster-sync/api/v1alpha1"
+	rcv1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
@@ -83,11 +84,21 @@ func (s *impl) Start(ctx context.Context) error {
 
 /* ---------------------------- callbacks ---------------------------------- */
 
-func (s *impl) onRcnodeAdd(obj interface{}) {
-	rc := obj.(*rcv1.Rcnode)
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.rcNodes[rc.Name] = rc.DeepCopy()
+func (c *impl) onRcnodeAdd(obj interface{}) {
+	u, ok := obj.(*unstructured.Unstructured)
+	if !ok {
+		klog.Errorf("rcnode add: not Unstructured, got %T", obj)
+		return
+	}
+	var rc rcv1.Rcnode
+	if err := runtime.DefaultUnstructuredConverter.
+		FromUnstructured(u.Object, &rc); err != nil {
+		klog.ErrorS(err, "cannot convert Rcnode")
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.rcNodes[rc.Name] = &rc
 }
 func (s *impl) onRcnodeDel(obj interface{}) {
 	rc := obj.(*rcv1.Rcnode)
