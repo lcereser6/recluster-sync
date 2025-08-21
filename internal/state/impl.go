@@ -1,191 +1,197 @@
+// internal/state/impl.go
+//
+// “Live view” of the cluster – pure read-only informers that emit log lines
+// whenever something interesting happens.
+//
+// It implements controller-runtime’s Runnable interface, so main.go can simply
+// mgr.Add(stateObj) and forget about it.
+
 package state
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"sync"
+	"time"
 
-	rcv1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	corev1 "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/strategicpatch"
-	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/dynamic"
+	// client-go bits
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/klog/v2"
+
+	// generated clientset for our CRDs
+	rcclient "github.com/lcereser6/recluster-sync/apis/client/clientset/versioned"
+	rcinformers "github.com/lcereser6/recluster-sync/apis/client/informers/externalversions"
+	rclisters "github.com/lcereser6/recluster-sync/apis/client/listers/recluster.com/v1alpha1"
+	"github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
 )
 
-type impl struct {
-	/* immutable */
-	k8s    kubernetes.Interface
-	dyn    dynamic.Interface
-	scheme *runtime.Scheme
+// ---------------------------------------------------------------------------
+// concrete impl
+// ---------------------------------------------------------------------------
 
-	/* live caches (guarded by mu) */
-	mu      sync.RWMutex
-	rcNodes map[string]*rcv1.Rcnode
-	pods    map[types.NamespacedName]*corev1.Pod
-
-	/* informers */
-	rcInf  cache.SharedIndexInformer
-	podInf cache.SharedIndexInformer
+type liveState struct {
+	factory     informers.SharedInformerFactory   // core/v1
+	rcFactory   rcinformers.SharedInformerFactory // our CRDs
+	podInf      cache.SharedIndexInformer
+	rcnodeInf   cache.SharedIndexInformer
+	rcpolicyInf cache.SharedIndexInformer
 }
 
-func (s *impl) Start(ctx context.Context) error {
-	s.rcNodes = map[string]*rcv1.Rcnode{}
-	s.pods = map[types.NamespacedName]*corev1.Pod{}
-
-	f := informers.NewSharedInformerFactory(s.k8s, resyncPeriod)
-
-	// --- Rcnode CRD informer (dynamic) -----------------------------------
-	gvr := rcv1.GroupVersion.WithResource("rcnodes")
-	s.rcInf = cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc: func(options meta.ListOptions) (runtime.Object, error) {
-				return s.dyn.Resource(gvr).List(ctx, options)
-			},
-			WatchFunc: func(options meta.ListOptions) (watch.Interface, error) {
-				return s.dyn.Resource(gvr).Watch(ctx, options)
-			},
-		},
-		&rcv1.Rcnode{}, 0, cache.Indexers{},
-	)
-	s.rcInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    s.onRcnodeAdd,
-		UpdateFunc: func(_, newObj interface{}) { s.onRcnodeAdd(newObj) },
-		DeleteFunc: s.onRcnodeDel,
-	})
-
-	// --- Pods (all namespaces) -------------------------------------------
-	s.podInf = f.Core().V1().Pods().Informer()
-	s.podInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    s.onPodAdd,
-		UpdateFunc: func(_, newObj interface{}) { s.onPodAdd(newObj) },
-		DeleteFunc: s.onPodDel,
-	})
-
-	go s.rcInf.Run(ctx.Done())
-	go f.Start(ctx.Done())
-
-	// block until both have synced
-	if !cache.WaitForCacheSync(ctx.Done(), s.rcInf.HasSynced, s.podInf.HasSynced) {
-		return fmt.Errorf("state: informer sync failed")
+// Pods implements State.
+func (s *liveState) Pods() []*v1.Pod {
+	pods, err := s.factory.Core().V1().Pods().Lister().List(labels.Everything())
+	if err != nil {
+		logf.Log.Error(err, "failed to list Pods")
+		return nil
 	}
-	klog.Info("state: informer caches in-sync")
+	return pods
+
+}
+
+// RcNodes implements State.
+func (s *liveState) RcNodes() []*v1alpha1.RcNode {
+	nodes, err := s.rcFactory.Recluster().V1alpha1().RcNodes().Lister().List(labels.Everything())
+	if err != nil {
+		logf.Log.Error(err, "failed to list RcNodes")
+		return nil
+	}
+	return nodes
+}
+
+// RcPolicies implements State.
+func (s *liveState) RcPolicies() []*v1alpha1.RcPolicy {
+	policies, err := s.rcFactory.Recluster().V1alpha1().RcPolicies().Lister().List(labels.Everything())
+	if err != nil {
+		logf.Log.Error(err, "failed to list RcPolicies")
+		return nil
+	}
+	return policies
+}
+
+// New wires informers but does *not* start them (manager will).
+func New(restCfg *rest.Config) (State, error) {
+	// --- core /v1 client -------------------------------------------------
+	cfg, err := rest.InClusterConfig() // or clientcmd.BuildConfigFromFlags
+	if err != nil {
+		return nil, err
+	}
+	k8sCS := kubernetes.NewForConfigOrDie(cfg)
+
+	if err != nil {
+		return nil, err
+	}
+	coreFactory := informers.NewSharedInformerFactory(k8sCS, 0)
+
+	// --- CRD client ------------------------------------------------------
+	rcCS, err := rcclient.NewForConfig(restCfg)
+	if err != nil {
+		return nil, err
+	}
+	rcFactory := rcinformers.NewSharedInformerFactory(rcCS, 0)
+
+	st := &liveState{
+		factory:     coreFactory,
+		rcFactory:   rcFactory,
+		podInf:      coreFactory.Core().V1().Pods().Informer(),
+		rcnodeInf:   rcFactory.Recluster().V1alpha1().RcNodes().Informer(),
+		rcpolicyInf: rcFactory.Recluster().V1alpha1().RcPolicies().Informer(),
+	}
+
+	st.podInf.AddEventHandler(newLoggingHandlers("Pod"))
+	st.rcnodeInf.AddEventHandler(newLoggingHandlers("RCNode"))
+	st.rcpolicyInf.AddEventHandler(newLoggingHandlers("RCPolicy"))
+
+	return st, nil
+}
+
+/* ---------------- controller-runtime Runnable -------------------- */
+
+func (s *liveState) Start(ctx context.Context) error {
+	log := logf.FromContext(ctx).WithName("state-runner")
+
+	// start factories -> start ALL informers underneath
+	s.factory.Start(ctx.Done())
+	s.rcFactory.Start(ctx.Done())
+
+	log.Info("waiting for informer caches to sync …")
+	if ok := cache.WaitForCacheSync(
+		ctx.Done(),
+		s.podInf.HasSynced,
+		s.rcnodeInf.HasSynced,
+		s.rcpolicyInf.HasSynced,
+	); !ok {
+		return context.Canceled
+	}
+	log.Info("caches in-sync – live state ready")
+
+	go func() {
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+
+		log := logf.FromContext(ctx).WithName("state-printer")
+
+		for {
+			select {
+			case <-ticker.C:
+
+				pods := s.Pods()
+				log.Info("Current Pods", "count", len(pods))
+
+				rcNodes := s.RcNodes()
+				log.Info("Current RcNodes", "count", len(rcNodes))
+
+				rcPolicies := s.RcPolicies()
+				log.Info("Current RcPolicies", "count", len(rcPolicies))
+
+			case <-ctx.Done():
+				log.Info("Stopping state printer thread")
+				return
+			}
+		}
+	}()
+
+	<-ctx.Done() // block until manager stops
 	return nil
 }
 
-/* ---------------------------- callbacks ---------------------------------- */
+/* ---------------- public getters ------------------ */
 
-func (c *impl) onRcnodeAdd(obj interface{}) {
-	u, ok := obj.(*unstructured.Unstructured)
-	if !ok {
-		klog.Errorf("rcnode add: not Unstructured, got %T", obj)
-		return
-	}
-	var rc rcv1.Rcnode
-	if err := runtime.DefaultUnstructuredConverter.
-		FromUnstructured(u.Object, &rc); err != nil {
-		klog.ErrorS(err, "cannot convert Rcnode")
-		return
-	}
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.rcNodes[rc.Name] = &rc
+func (s *liveState) RcNodeLister() rclisters.RcNodeLister {
+	return s.rcFactory.Recluster().V1alpha1().RcNodes().Lister()
 }
-func (s *impl) onRcnodeDel(obj interface{}) {
-	rc := obj.(*rcv1.Rcnode)
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	delete(s.rcNodes, rc.Name)
+func (s *liveState) RcPolicyLister() rclisters.RcPolicyLister {
+	return s.rcFactory.Recluster().V1alpha1().RcPolicies().Lister()
+}
+func (s *liveState) PodInformer() cache.SharedIndexInformer { return s.podInf }
+
+/* ---------------- tiny helpers -------------------- */
+
+func key(obj interface{}) string {
+	if k, err := cache.MetaNamespaceKeyFunc(obj); err == nil {
+		return k
+	}
+	return "?"
 }
 
-func (s *impl) onPodAdd(obj interface{}) {
-	p := obj.(*corev1.Pod)
-	key := types.NamespacedName{Namespace: p.Namespace, Name: p.Name}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.pods[key] = p.DeepCopy()
-}
-func (s *impl) onPodDel(obj interface{}) {
-	p := obj.(*corev1.Pod)
-	key := types.NamespacedName{Namespace: p.Namespace, Name: p.Name}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	delete(s.pods, key)
-}
-
-/* -------------------------- public snapshots ----------------------------- */
-
-func (s *impl) RcNodes() []rcv1.Rcnode {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	out := make([]rcv1.Rcnode, 0, len(s.rcNodes))
-	for _, rc := range s.rcNodes {
-		out = append(out, *rc.DeepCopy())
+func newLoggingHandlers(resourceName string) cache.ResourceEventHandlerFuncs {
+	log := logf.Log.WithName("event-logger")
+	addFunc := func(obj interface{}) {
+		log.Info("add", "gvk", resourceName, "key", key(obj))
 	}
-	return out
-}
-
-func (s *impl) UnschedulablePods() []corev1.Pod {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	out := []corev1.Pod{}
-	for _, p := range s.pods {
-		if isUnschedulable(p) {
-			out = append(out, *p.DeepCopy())
-		}
+	updateFunc := func(oldObj, newObj interface{}) {
+		log.Info("update", "gvk", resourceName, "key", key(newObj))
 	}
-	return out
-}
-
-func (s *impl) PodByKey(k types.NamespacedName) *corev1.Pod {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	if p, ok := s.pods[k]; ok {
-		return p.DeepCopy()
+	deleteFunc := func(obj interface{}) {
+		log.Info("delete", "gvk", resourceName, "key", key(obj))
 	}
-	return nil
-}
 
-/* ------------------------- mutation helpers ------------------------------ */
-
-func (s *impl) UpdatePodAnnotations(p *corev1.Pod, add map[string]string) error {
-	after := p.DeepCopy()
-	if after.Annotations == nil {
-		after.Annotations = map[string]string{}
+	return cache.ResourceEventHandlerFuncs{
+		AddFunc:    addFunc,
+		UpdateFunc: updateFunc,
+		DeleteFunc: deleteFunc,
 	}
-	for k, v := range add {
-		after.Annotations[k] = v
-	}
-	beforeJSON, _ := json.Marshal(p)
-	afterJSON, _ := json.Marshal(after)
-
-	patch, _ := strategicpatch.CreateTwoWayMergePatch(beforeJSON, afterJSON, corev1.Pod{})
-	_, err := s.k8s.CoreV1().Pods(p.Namespace).Patch(context.TODO(), p.Name,
-		types.StrategicMergePatchType, patch, meta.PatchOptions{})
-	return err
-}
-
-/* ------------------------------ helpers ---------------------------------- */
-
-func isUnschedulable(p *corev1.Pod) bool {
-	if p.Spec.NodeName != "" {
-		return false // already scheduled
-	}
-	for _, c := range p.Status.Conditions {
-		if c.Type == corev1.PodScheduled &&
-			c.Status == corev1.ConditionFalse &&
-			c.Reason == corev1.PodReasonUnschedulable {
-			return true
-		}
-	}
-	return false
 }

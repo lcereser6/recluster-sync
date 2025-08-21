@@ -9,19 +9,19 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// Backend reconciles ONE Rcnode.
+// Backend reconciles ONE RcNode.
 type Backend interface {
 	// Reconcile must make the real world match rc.Spec.DesiredState
 	// – create / patch / delete resources as needed.
-	Reconcile(ctx context.Context, rc *rcv1.Rcnode) error
+	Reconcile(ctx context.Context, rc *rcv1.RcNode) error
 }
 
 // -----------------------------------------------------------------------------
 // Factory helper – returns the concrete impl selected by MODE env var
 // -----------------------------------------------------------------------------
 func New(mode string, k8s kubernetes.Interface) (Backend, error) {
-	//loga
-	klog.Infof("Backend used: %q", mode)
+
+	klog.Infof("Creating Backend using %q mode", mode)
 	switch mode {
 	case "kwok":
 		return NewKwokBackend(k8s), nil

@@ -27,12 +27,12 @@ type FakeReclusterV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeReclusterV1alpha1) RcPolicies(namespace string) v1alpha1.RcPolicyInterface {
-	return newFakeRcPolicies(c, namespace)
+func (c *FakeReclusterV1alpha1) RcNodes(namespace string) v1alpha1.RcNodeInterface {
+	return newFakeRcNodes(c, namespace)
 }
 
-func (c *FakeReclusterV1alpha1) Rcnodes(namespace string) v1alpha1.RcnodeInterface {
-	return newFakeRcnodes(c, namespace)
+func (c *FakeReclusterV1alpha1) RcPolicies(namespace string) v1alpha1.RcPolicyInterface {
+	return newFakeRcPolicies(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

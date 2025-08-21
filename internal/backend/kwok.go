@@ -37,12 +37,12 @@ func NewKwokBackend(k8s kubernetes.Interface) *kwokBackend {
 // ----------------------------------------------------------------------------
 // Reconcile
 // ----------------------------------------------------------------------------
-func (b *kwokBackend) Reconcile(ctx context.Context, rc *rcv1.Rcnode) error {
+func (b *kwokBackend) Reconcile(ctx context.Context, rc *rcv1.RcNode) error {
 	wantRunning := rc.Spec.DesiredState == "Running"
 	nodeName := templateNodeName(rc) // "kwok-fake-<rcname>"
 	providerID := fmt.Sprintf("recluster://%s", rc.Name)
 
-	klog.Infof("KWOK: reconcile Rcnode %q (%s) -> %q", rc.Name, rc.Spec.DesiredState, nodeName)
+	klog.Infof("KWOK: reconcile RcNode %q (%s) -> %q", rc.Name, rc.Spec.DesiredState, nodeName)
 	// does the Node already exist?
 	node, err := b.core.Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil && !isNotFound(err) {
@@ -51,12 +51,12 @@ func (b *kwokBackend) Reconcile(ctx context.Context, rc *rcv1.Rcnode) error {
 
 	switch {
 	// ----------------------------------------------------------------------
-	// 1) Rcnode says it should run  ►  ensure Node exists & Ready=True
+	// 1) RcNode says it should run  ►  ensure Node exists & Ready=True
 	// ----------------------------------------------------------------------
 	case wantRunning:
 		if isNotFound(err) {
 			// create brand-new node
-			klog.Infof("KWOK: creating fake node %q for Rcnode %q", nodeName, rc.Name)
+			klog.Infof("KWOK: creating fake node %q for RcNode %q", nodeName, rc.Name)
 			_, err = b.core.Nodes().Create(ctx, buildKwokNode(rc, nodeName, providerID),
 				metav1.CreateOptions{})
 			return err
@@ -66,13 +66,13 @@ func (b *kwokBackend) Reconcile(ctx context.Context, rc *rcv1.Rcnode) error {
 		return b.ensureReady(ctx, node, providerID)
 
 	// ----------------------------------------------------------------------
-	// 2) Rcnode wants it stopped  ►  delete Node if present
+	// 2) RcNode wants it stopped  ►  delete Node if present
 	// ----------------------------------------------------------------------
 	default:
 		if isNotFound(err) {
 			return nil // nothing to do
 		}
-		klog.Infof("KWOK: deleting fake node %q (Rcnode %q wants Stopped)", nodeName, rc.Name)
+		klog.Infof("KWOK: deleting fake node %q (RcNode %q wants Stopped)", nodeName, rc.Name)
 		return b.core.Nodes().Delete(ctx, nodeName, metav1.DeleteOptions{})
 	}
 }
@@ -80,15 +80,15 @@ func (b *kwokBackend) Reconcile(ctx context.Context, rc *rcv1.Rcnode) error {
 // ----------------------------------------------------------------------------
 // helpers
 // ----------------------------------------------------------------------------
-func buildKwokNode(rc *rcv1.Rcnode, nodeName, providerID string) *corev1.Node {
-	cpuMillicores := rc.Spec.CPUCores * 1000
-	memBytes := int64(rc.Spec.MemoryGiB) * 1024 * 1024 * 1024
-	klog.Infof("KWOK: creating fake node (Rcnode %q wants %d cores, %d GiB)", rc.Name, rc.Spec.CPUCores, rc.Spec.MemoryGiB)
+func buildKwokNode(rc *rcv1.RcNode, nodeName, providerID string) *corev1.Node {
+	cpuMillicores := rc.Spec.CPU.Cores * 1000
+	memBytes := int64(rc.Spec.Memory) * 1024 * 1024 * 1024
+	klog.Infof("KWOK: creating fake node (RcNode %q wants %d cores, %d GiB)", rc.Name, rc.Spec.CPU.Cores, rc.Spec.Memory)
 	return &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: nodeName,
 			Labels: map[string]string{
-				"kubernetes.io/cores": fmt.Sprintf("%d", rc.Spec.CPUCores), // "amd64" or "arm64"
+				"kubernetes.io/cores": fmt.Sprintf("%d", rc.Spec.CPU.Cores), // "amd64" or "arm64"
 				"kubernetes.io/os":    "linux",
 				"kubernetes.io/arch":  "amd64",
 			},
@@ -172,7 +172,7 @@ func isNotFound(err error) bool {
 }
 
 // templateNodeName replicates the naming used in the plan
-func templateNodeName(rc *rcv1.Rcnode) string {
+func templateNodeName(rc *rcv1.RcNode) string {
 	return fmt.Sprintf("kwok-fake-%s", rc.Name)
 }
 

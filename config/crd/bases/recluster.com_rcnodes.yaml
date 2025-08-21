@@ -8,8 +8,8 @@ metadata:
 spec:
   group: recluster.com
   names:
-    kind: Rcnode
-    listKind: RcnodeList
+    kind: RcNode
+    listKind: RcNodeList
     plural: rcnodes
     singular: rcnode
   scope: Namespaced
@@ -17,7 +17,6 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Rcnode is the Schema for the rcnodes API.
         properties:
           apiVersion:
             description: |-
@@ -37,30 +36,159 @@ spec:
           metadata:
             type: object
           spec:
-            description: RcnodeSpec defines the desired state of Rcnode.
             properties:
+              address:
+                type: string
               bootSeconds:
                 type: integer
-              cpuCores:
-                type: integer
+              cpu:
+                properties:
+                  architecture:
+                    type: string
+                  cacheL1d:
+                    type: integer
+                  cacheL1i:
+                    type: integer
+                  cacheL2:
+                    type: integer
+                  cacheL3:
+                    type: integer
+                  cores:
+                    type: integer
+                  efficiencyThreshold:
+                    type: integer
+                  family:
+                    type: integer
+                  flags:
+                    items:
+                      type: string
+                    type: array
+                  model:
+                    type: integer
+                  multiThreadScore:
+                    type: integer
+                  name:
+                    type: string
+                  performanceThreshold:
+                    type: integer
+                  singleThreadScore:
+                    type: integer
+                  vendor:
+                    type: string
+                  vulnerabilities:
+                    items:
+                      type: string
+                    type: array
+                required:
+                - architecture
+                - cores
+                - family
+                - model
+                - name
+                - vendor
+                type: object
               desiredState:
                 type: string
-              foo:
-                type: string
-              memoryGiB:
+              interfaces:
+                items:
+                  properties:
+                    address:
+                      type: string
+                    name:
+                      type: string
+                    speed:
+                      format: int64
+                      type: integer
+                    wol:
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - address
+                  - name
+                  type: object
+                type: array
+              maxEfficiencyPowerConsumption:
                 type: integer
+              maxPowerConsumption:
+                type: integer
+              memoryBytes:
+                format: int64
+                type: integer
+              minPerformancePowerConsumption:
+                type: integer
+              minPowerConsumption:
+                type: integer
+              nodePool:
+                type: string
+              permissions:
+                items:
+                  type: string
+                type: array
+              powerCurve:
+                properties:
+                  points:
+                    items:
+                      properties:
+                        loadPct:
+                          type: integer
+                        powerWatts:
+                          type: integer
+                      required:
+                      - loadPct
+                      - powerWatts
+                      type: object
+                    type: array
+                required:
+                - points
+                type: object
+              roles:
+                items:
+                  type: string
+                type: array
+              storages:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    size:
+                      description: Size in bytes (aligning with Prisma’s BigInt)
+                      format: int64
+                      type: integer
+                  required:
+                  - name
+                  - size
+                  type: object
+                type: array
             required:
-            - cpuCores
-            - memoryGiB
+            - address
+            - cpu
+            - memoryBytes
             type: object
           status:
-            description: RcnodeStatus defines the observed state of Rcnode.
             properties:
-              state:
-                description: |-
-                  INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-                  Important: Run "make" to regenerate code after modifying this file
+              lastHeartbeat:
+                format: date-time
                 type: string
+              lastTransition:
+                format: date-time
+                type: string
+              message:
+                type: string
+              nodePoolAssigned:
+                type: boolean
+              observedPowerWatts:
+                type: integer
+              predictedPowerWatts:
+                type: integer
+              reason:
+                type: string
+              state:
+                type: string
+              utilizationMilliCPU:
+                type: integer
+              utilizationPct:
+                type: number
             type: object
         type: object
     served: true

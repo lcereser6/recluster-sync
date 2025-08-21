@@ -17,6 +17,6 @@ limitations under the License.
 
 package v1alpha1
 
-type RcPolicyExpansion interface{}
+type RcNodeExpansion interface{}
 
-type RcnodeExpansion interface{}
+type RcPolicyExpansion interface{}

@@ -27,6 +27,7 @@ type RcPolicyStatusApplyConfiguration struct {
 	MatchedPods  *int32   `json:"matchedPods,omitempty"`
 	RejectedPods *int32   `json:"rejectedPods,omitempty"`
 	LastResolved *v1.Time `json:"lastResolved,omitempty"`
+	LastFeedSync *v1.Time `json:"lastFeedSync,omitempty"`
 }
 
 // RcPolicyStatusApplyConfiguration constructs a declarative configuration of the RcPolicyStatus type for use with
@@ -56,5 +57,13 @@ func (b *RcPolicyStatusApplyConfiguration) WithRejectedPods(value int32) *RcPoli
 // If called multiple times, the LastResolved field is set to the value of the last call.
 func (b *RcPolicyStatusApplyConfiguration) WithLastResolved(value v1.Time) *RcPolicyStatusApplyConfiguration {
 	b.LastResolved = &value
+	return b
+}
+
+// WithLastFeedSync sets the LastFeedSync field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LastFeedSync field is set to the value of the last call.
+func (b *RcPolicyStatusApplyConfiguration) WithLastFeedSync(value v1.Time) *RcPolicyStatusApplyConfiguration {
+	b.LastFeedSync = &value
 	return b
 }

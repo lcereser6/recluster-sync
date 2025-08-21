@@ -24,46 +24,46 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// RcnodeLister helps list Rcnodes.
+// RcNodeLister helps list RcNodes.
 // All objects returned here must be treated as read-only.
-type RcnodeLister interface {
-	// List lists all Rcnodes in the indexer.
+type RcNodeLister interface {
+	// List lists all RcNodes in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*reclustercomv1alpha1.Rcnode, err error)
-	// Rcnodes returns an object that can list and get Rcnodes.
-	Rcnodes(namespace string) RcnodeNamespaceLister
-	RcnodeListerExpansion
+	List(selector labels.Selector) (ret []*reclustercomv1alpha1.RcNode, err error)
+	// RcNodes returns an object that can list and get RcNodes.
+	RcNodes(namespace string) RcNodeNamespaceLister
+	RcNodeListerExpansion
 }
 
-// rcnodeLister implements the RcnodeLister interface.
-type rcnodeLister struct {
-	listers.ResourceIndexer[*reclustercomv1alpha1.Rcnode]
+// rcNodeLister implements the RcNodeLister interface.
+type rcNodeLister struct {
+	listers.ResourceIndexer[*reclustercomv1alpha1.RcNode]
 }
 
-// NewRcnodeLister returns a new RcnodeLister.
-func NewRcnodeLister(indexer cache.Indexer) RcnodeLister {
-	return &rcnodeLister{listers.New[*reclustercomv1alpha1.Rcnode](indexer, reclustercomv1alpha1.Resource("rcnode"))}
+// NewRcNodeLister returns a new RcNodeLister.
+func NewRcNodeLister(indexer cache.Indexer) RcNodeLister {
+	return &rcNodeLister{listers.New[*reclustercomv1alpha1.RcNode](indexer, reclustercomv1alpha1.Resource("rcnode"))}
 }
 
-// Rcnodes returns an object that can list and get Rcnodes.
-func (s *rcnodeLister) Rcnodes(namespace string) RcnodeNamespaceLister {
-	return rcnodeNamespaceLister{listers.NewNamespaced[*reclustercomv1alpha1.Rcnode](s.ResourceIndexer, namespace)}
+// RcNodes returns an object that can list and get RcNodes.
+func (s *rcNodeLister) RcNodes(namespace string) RcNodeNamespaceLister {
+	return rcNodeNamespaceLister{listers.NewNamespaced[*reclustercomv1alpha1.RcNode](s.ResourceIndexer, namespace)}
 }
 
-// RcnodeNamespaceLister helps list and get Rcnodes.
+// RcNodeNamespaceLister helps list and get RcNodes.
 // All objects returned here must be treated as read-only.
-type RcnodeNamespaceLister interface {
-	// List lists all Rcnodes in the indexer for a given namespace.
+type RcNodeNamespaceLister interface {
+	// List lists all RcNodes in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*reclustercomv1alpha1.Rcnode, err error)
-	// Get retrieves the Rcnode from the indexer for a given namespace and name.
+	List(selector labels.Selector) (ret []*reclustercomv1alpha1.RcNode, err error)
+	// Get retrieves the RcNode from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*reclustercomv1alpha1.Rcnode, error)
-	RcnodeNamespaceListerExpansion
+	Get(name string) (*reclustercomv1alpha1.RcNode, error)
+	RcNodeNamespaceListerExpansion
 }
 
-// rcnodeNamespaceLister implements the RcnodeNamespaceLister
+// rcNodeNamespaceLister implements the RcNodeNamespaceLister
 // interface.
-type rcnodeNamespaceLister struct {
-	listers.ResourceIndexer[*reclustercomv1alpha1.Rcnode]
+type rcNodeNamespaceLister struct {
+	listers.ResourceIndexer[*reclustercomv1alpha1.RcNode]
 }

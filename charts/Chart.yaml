@@ -1,6 +1,7 @@
+#chart.yaml
 apiVersion: v2
 name: recluster-sync
-description: Recluster controller that bridges Rcnode CRDs with KWOK / test / prod back-ends
+description: Recluster controller that bridges RcNode CRDs with KWOK / test / prod back-ends
 type: application
 version: 0.1.0            # chart version
 appVersion: "dev"         # container tag; overwritten by --set image.tag

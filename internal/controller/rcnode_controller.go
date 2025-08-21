@@ -1,65 +1,43 @@
-/*
-Copyright 2025.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controller
 
 import (
 	"context"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	reclusterv1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
+	"github.com/lcereser6/recluster-sync/internal/backend"
+	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-
-	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
-	"github.com/lcereser6/recluster-sync/internal/state"
 )
 
-// RcnodeReconciler reconciles a Rcnode object
-type RcnodeReconciler struct {
+type RcNodeReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
-	State  state.State // ← NEW
+	be backend.Backend
 }
 
-// +kubebuilder:rbac:groups=recluster.com,resources=rcnodes,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=recluster.com,resources=rcnodes/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=recluster.com,resources=rcnodes/finalizers,verbs=update
+func NewRcNodeReconciler(mgr ctrl.Manager, be backend.Backend) *RcNodeReconciler {
+	return &RcNodeReconciler{Client: mgr.GetClient(), be: be}
+}
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Rcnode object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.4/pkg/reconcile
-func (r *RcnodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+func (r *RcNodeReconciler) Reconcile(ctx context.Context,
+	req ctrl.Request) (ctrl.Result, error) {
 
-	// TODO(user): your logic here
-
+	var rc reclusterv1.RcNode
+	if err := r.Get(ctx, req.NamespacedName, &rc); err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, err
+	}
+	if err := r.be.Reconcile(ctx, &rc); err != nil {
+		return ctrl.Result{}, err // retry on backend error
+	}
+	// backend did its job → update observed status if you like
 	return ctrl.Result{}, nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *RcnodeReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *RcNodeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&reclusterv1alpha1.Rcnode{}).
-		Named("rcnode").
+		For(&reclusterv1.RcNode{}).
 		Complete(r)
 }

@@ -27,8 +27,8 @@ import (
 
 type ReclusterV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	RcNodesGetter
 	RcPoliciesGetter
-	RcnodesGetter
 }
 
 // ReclusterV1alpha1Client is used to interact with features provided by the recluster.com group.
@@ -36,12 +36,12 @@ type ReclusterV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *ReclusterV1alpha1Client) RcPolicies(namespace string) RcPolicyInterface {
-	return newRcPolicies(c, namespace)
+func (c *ReclusterV1alpha1Client) RcNodes(namespace string) RcNodeInterface {
+	return newRcNodes(c, namespace)
 }
 
-func (c *ReclusterV1alpha1Client) Rcnodes(namespace string) RcnodeInterface {
-	return newRcnodes(c, namespace)
+func (c *ReclusterV1alpha1Client) RcPolicies(namespace string) RcPolicyInterface {
+	return newRcPolicies(c, namespace)
 }
 
 // NewForConfig creates a new ReclusterV1alpha1Client for the given config.
@@ -49,7 +49,9 @@ func (c *ReclusterV1alpha1Client) Rcnodes(namespace string) RcnodeInterface {
 // where httpClient was generated with rest.HTTPClientFor(c).
 func NewForConfig(c *rest.Config) (*ReclusterV1alpha1Client, error) {
 	config := *c
-	setConfigDefaults(&config)
+	if err := setConfigDefaults(&config); err != nil {
+		return nil, err
+	}
 	httpClient, err := rest.HTTPClientFor(&config)
 	if err != nil {
 		return nil, err
@@ -61,7 +63,9 @@ func NewForConfig(c *rest.Config) (*ReclusterV1alpha1Client, error) {
 // Note the http client provided takes precedence over the configured transport values.
 func NewForConfigAndClient(c *rest.Config, h *http.Client) (*ReclusterV1alpha1Client, error) {
 	config := *c
-	setConfigDefaults(&config)
+	if err := setConfigDefaults(&config); err != nil {
+		return nil, err
+	}
 	client, err := rest.RESTClientForConfigAndClient(&config, h)
 	if err != nil {
 		return nil, err
@@ -84,7 +88,7 @@ func New(c rest.Interface) *ReclusterV1alpha1Client {
 	return &ReclusterV1alpha1Client{c}
 }
 
-func setConfigDefaults(config *rest.Config) {
+func setConfigDefaults(config *rest.Config) error {
 	gv := reclustercomv1alpha1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
@@ -93,6 +97,8 @@ func setConfigDefaults(config *rest.Config) {
 	if config.UserAgent == "" {
 		config.UserAgent = rest.DefaultKubernetesUserAgent()
 	}
+
+	return nil
 }
 
 // RESTClient returns a RESTClient that is used to communicate

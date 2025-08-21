@@ -23,22 +23,22 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// RcnodeApplyConfiguration represents a declarative configuration of the Rcnode type for use
+// RcNodeApplyConfiguration represents a declarative configuration of the RcNode type for use
 // with apply.
-type RcnodeApplyConfiguration struct {
+type RcNodeApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                             *RcnodeSpecApplyConfiguration   `json:"spec,omitempty"`
-	Status                           *RcnodeStatusApplyConfiguration `json:"status,omitempty"`
+	Spec                             *RcNodeSpecApplyConfiguration   `json:"spec,omitempty"`
+	Status                           *RcNodeStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// Rcnode constructs a declarative configuration of the Rcnode type for use with
+// RcNode constructs a declarative configuration of the RcNode type for use with
 // apply.
-func Rcnode(name, namespace string) *RcnodeApplyConfiguration {
-	b := &RcnodeApplyConfiguration{}
+func RcNode(name, namespace string) *RcNodeApplyConfiguration {
+	b := &RcNodeApplyConfiguration{}
 	b.WithName(name)
 	b.WithNamespace(namespace)
-	b.WithKind("Rcnode")
+	b.WithKind("RcNode")
 	b.WithAPIVersion("recluster.com/v1alpha1")
 	return b
 }
@@ -46,7 +46,7 @@ func Rcnode(name, namespace string) *RcnodeApplyConfiguration {
 // WithKind sets the Kind field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Kind field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithKind(value string) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithKind(value string) *RcNodeApplyConfiguration {
 	b.TypeMetaApplyConfiguration.Kind = &value
 	return b
 }
@@ -54,7 +54,7 @@ func (b *RcnodeApplyConfiguration) WithKind(value string) *RcnodeApplyConfigurat
 // WithAPIVersion sets the APIVersion field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIVersion field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithAPIVersion(value string) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithAPIVersion(value string) *RcNodeApplyConfiguration {
 	b.TypeMetaApplyConfiguration.APIVersion = &value
 	return b
 }
@@ -62,7 +62,7 @@ func (b *RcnodeApplyConfiguration) WithAPIVersion(value string) *RcnodeApplyConf
 // WithName sets the Name field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Name field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithName(value string) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithName(value string) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	b.ObjectMetaApplyConfiguration.Name = &value
 	return b
@@ -71,7 +71,7 @@ func (b *RcnodeApplyConfiguration) WithName(value string) *RcnodeApplyConfigurat
 // WithGenerateName sets the GenerateName field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the GenerateName field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithGenerateName(value string) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithGenerateName(value string) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	b.ObjectMetaApplyConfiguration.GenerateName = &value
 	return b
@@ -80,7 +80,7 @@ func (b *RcnodeApplyConfiguration) WithGenerateName(value string) *RcnodeApplyCo
 // WithNamespace sets the Namespace field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Namespace field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithNamespace(value string) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithNamespace(value string) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	b.ObjectMetaApplyConfiguration.Namespace = &value
 	return b
@@ -89,7 +89,7 @@ func (b *RcnodeApplyConfiguration) WithNamespace(value string) *RcnodeApplyConfi
 // WithUID sets the UID field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the UID field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithUID(value types.UID) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithUID(value types.UID) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	b.ObjectMetaApplyConfiguration.UID = &value
 	return b
@@ -98,7 +98,7 @@ func (b *RcnodeApplyConfiguration) WithUID(value types.UID) *RcnodeApplyConfigur
 // WithResourceVersion sets the ResourceVersion field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ResourceVersion field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithResourceVersion(value string) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithResourceVersion(value string) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	b.ObjectMetaApplyConfiguration.ResourceVersion = &value
 	return b
@@ -107,7 +107,7 @@ func (b *RcnodeApplyConfiguration) WithResourceVersion(value string) *RcnodeAppl
 // WithGeneration sets the Generation field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Generation field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithGeneration(value int64) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithGeneration(value int64) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	b.ObjectMetaApplyConfiguration.Generation = &value
 	return b
@@ -116,7 +116,7 @@ func (b *RcnodeApplyConfiguration) WithGeneration(value int64) *RcnodeApplyConfi
 // WithCreationTimestamp sets the CreationTimestamp field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the CreationTimestamp field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithCreationTimestamp(value metav1.Time) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithCreationTimestamp(value metav1.Time) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	b.ObjectMetaApplyConfiguration.CreationTimestamp = &value
 	return b
@@ -125,7 +125,7 @@ func (b *RcnodeApplyConfiguration) WithCreationTimestamp(value metav1.Time) *Rcn
 // WithDeletionTimestamp sets the DeletionTimestamp field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the DeletionTimestamp field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithDeletionTimestamp(value metav1.Time) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithDeletionTimestamp(value metav1.Time) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	b.ObjectMetaApplyConfiguration.DeletionTimestamp = &value
 	return b
@@ -134,7 +134,7 @@ func (b *RcnodeApplyConfiguration) WithDeletionTimestamp(value metav1.Time) *Rcn
 // WithDeletionGracePeriodSeconds sets the DeletionGracePeriodSeconds field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the DeletionGracePeriodSeconds field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithDeletionGracePeriodSeconds(value int64) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithDeletionGracePeriodSeconds(value int64) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	b.ObjectMetaApplyConfiguration.DeletionGracePeriodSeconds = &value
 	return b
@@ -144,7 +144,7 @@ func (b *RcnodeApplyConfiguration) WithDeletionGracePeriodSeconds(value int64) *
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the Labels field,
 // overwriting an existing map entries in Labels field with the same key.
-func (b *RcnodeApplyConfiguration) WithLabels(entries map[string]string) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithLabels(entries map[string]string) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	if b.ObjectMetaApplyConfiguration.Labels == nil && len(entries) > 0 {
 		b.ObjectMetaApplyConfiguration.Labels = make(map[string]string, len(entries))
@@ -159,7 +159,7 @@ func (b *RcnodeApplyConfiguration) WithLabels(entries map[string]string) *Rcnode
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the Annotations field,
 // overwriting an existing map entries in Annotations field with the same key.
-func (b *RcnodeApplyConfiguration) WithAnnotations(entries map[string]string) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithAnnotations(entries map[string]string) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	if b.ObjectMetaApplyConfiguration.Annotations == nil && len(entries) > 0 {
 		b.ObjectMetaApplyConfiguration.Annotations = make(map[string]string, len(entries))
@@ -173,7 +173,7 @@ func (b *RcnodeApplyConfiguration) WithAnnotations(entries map[string]string) *R
 // WithOwnerReferences adds the given value to the OwnerReferences field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the OwnerReferences field.
-func (b *RcnodeApplyConfiguration) WithOwnerReferences(values ...*v1.OwnerReferenceApplyConfiguration) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithOwnerReferences(values ...*v1.OwnerReferenceApplyConfiguration) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	for i := range values {
 		if values[i] == nil {
@@ -187,7 +187,7 @@ func (b *RcnodeApplyConfiguration) WithOwnerReferences(values ...*v1.OwnerRefere
 // WithFinalizers adds the given value to the Finalizers field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Finalizers field.
-func (b *RcnodeApplyConfiguration) WithFinalizers(values ...string) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithFinalizers(values ...string) *RcNodeApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	for i := range values {
 		b.ObjectMetaApplyConfiguration.Finalizers = append(b.ObjectMetaApplyConfiguration.Finalizers, values[i])
@@ -195,7 +195,7 @@ func (b *RcnodeApplyConfiguration) WithFinalizers(values ...string) *RcnodeApply
 	return b
 }
 
-func (b *RcnodeApplyConfiguration) ensureObjectMetaApplyConfigurationExists() {
+func (b *RcNodeApplyConfiguration) ensureObjectMetaApplyConfigurationExists() {
 	if b.ObjectMetaApplyConfiguration == nil {
 		b.ObjectMetaApplyConfiguration = &v1.ObjectMetaApplyConfiguration{}
 	}
@@ -204,7 +204,7 @@ func (b *RcnodeApplyConfiguration) ensureObjectMetaApplyConfigurationExists() {
 // WithSpec sets the Spec field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Spec field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithSpec(value *RcnodeSpecApplyConfiguration) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithSpec(value *RcNodeSpecApplyConfiguration) *RcNodeApplyConfiguration {
 	b.Spec = value
 	return b
 }
@@ -212,13 +212,13 @@ func (b *RcnodeApplyConfiguration) WithSpec(value *RcnodeSpecApplyConfiguration)
 // WithStatus sets the Status field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Status field is set to the value of the last call.
-func (b *RcnodeApplyConfiguration) WithStatus(value *RcnodeStatusApplyConfiguration) *RcnodeApplyConfiguration {
+func (b *RcNodeApplyConfiguration) WithStatus(value *RcNodeStatusApplyConfiguration) *RcNodeApplyConfiguration {
 	b.Status = value
 	return b
 }
 
 // GetName retrieves the value of the Name field in the declarative configuration.
-func (b *RcnodeApplyConfiguration) GetName() *string {
+func (b *RcNodeApplyConfiguration) GetName() *string {
 	b.ensureObjectMetaApplyConfigurationExists()
 	return b.ObjectMetaApplyConfiguration.Name
 }

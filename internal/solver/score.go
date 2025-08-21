@@ -36,14 +36,14 @@ func init() {
 /* -------------------------------------------------------------------------- */
 
 type candidate struct {
-	Node   *rcv1.Rcnode
+	Node   *rcv1.RcNode
 	Score  float64
 	Detail map[string]float64
 }
 
 /* ------------------------ hard-constraint checker ------------------------- */
 
-func satisfies(n *rcv1.Rcnode, expr string) (bool, error) {
+func satisfies(n *rcv1.RcNode, expr string) (bool, error) {
 	ast, iss := env.Parse(expr)
 	if iss.Err() != nil {
 		return false, iss.Err()
@@ -62,13 +62,13 @@ func satisfies(n *rcv1.Rcnode, expr string) (bool, error) {
 
 /* -------------------------- metric + transform ---------------------------- */
 
-func metricValue(m rcv1.PolicyMetric, n *rcv1.Rcnode) (float64, error) {
+func metricValue(m rcv1.PolicyMetric, n *rcv1.RcNode) (float64, error) {
 	var raw float64
 	switch m.Key {
 	case "cpu":
-		raw = float64(n.Spec.CPUCores)
+		raw = float64(n.Spec.CPU.Cores)
 	case "ram":
-		raw = float64(n.Spec.MemoryGiB)
+		raw = float64(n.Spec.Memory)
 	case "boot":
 		raw = float64(n.Spec.BootSeconds)
 	default:
@@ -100,9 +100,9 @@ func metricValue(m rcv1.PolicyMetric, n *rcv1.Rcnode) (float64, error) {
 
 /* ----------------------------- public API --------------------------------- */
 
-// PickBest returns the Rcnode with the lowest weighted-score that satisfies
+// PickBest returns the RcNode with the lowest weighted-score that satisfies
 // *all* hard constraints in the supplied policy.
-func PickBest(pol *rcv1.RcPolicy, nodes []rcv1.Rcnode) (*rcv1.Rcnode, error) {
+func PickBest(pol *rcv1.RcPolicy, nodes []rcv1.RcNode) (*rcv1.RcNode, error) {
 	var best *candidate
 
 outer:
@@ -148,10 +148,10 @@ outer:
 
 /* ------------------------------- helpers ---------------------------------- */
 
-func toVars(n *rcv1.Rcnode) map[string]interface{} {
+func toVars(n *rcv1.RcNode) map[string]interface{} {
 	return map[string]interface{}{
-		"cpu":  float64(n.Spec.CPUCores),
-		"ram":  float64(n.Spec.MemoryGiB),
+		"cpu":  float64(n.Spec.CPU.Cores),
+		"ram":  float64(n.Spec.Memory),
 		"boot": float64(n.Spec.BootSeconds),
 	}
 }

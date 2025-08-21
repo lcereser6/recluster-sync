@@ -17,12 +17,18 @@ limitations under the License.
 
 package v1alpha1
 
+import (
+	reclustercomv1alpha1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
+)
+
 // PolicyMetricApplyConfiguration represents a declarative configuration of the PolicyMetric type for use
 // with apply.
 type PolicyMetricApplyConfiguration struct {
-	Key       *string  `json:"key,omitempty"`
-	Weight    *float64 `json:"weight,omitempty"`
-	Transform *string  `json:"transform,omitempty"`
+	Key       *string                         `json:"key,omitempty"`
+	Weight    *float64                        `json:"weight,omitempty"`
+	Source    *reclustercomv1alpha1.ValueFrom `json:"source,omitempty"`
+	Selector  *string                         `json:"selector,omitempty"`
+	Transform *string                         `json:"transform,omitempty"`
 }
 
 // PolicyMetricApplyConfiguration constructs a declarative configuration of the PolicyMetric type for use with
@@ -44,6 +50,22 @@ func (b *PolicyMetricApplyConfiguration) WithKey(value string) *PolicyMetricAppl
 // If called multiple times, the Weight field is set to the value of the last call.
 func (b *PolicyMetricApplyConfiguration) WithWeight(value float64) *PolicyMetricApplyConfiguration {
 	b.Weight = &value
+	return b
+}
+
+// WithSource sets the Source field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Source field is set to the value of the last call.
+func (b *PolicyMetricApplyConfiguration) WithSource(value reclustercomv1alpha1.ValueFrom) *PolicyMetricApplyConfiguration {
+	b.Source = &value
+	return b
+}
+
+// WithSelector sets the Selector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Selector field is set to the value of the last call.
+func (b *PolicyMetricApplyConfiguration) WithSelector(value string) *PolicyMetricApplyConfiguration {
+	b.Selector = &value
 	return b
 }
 

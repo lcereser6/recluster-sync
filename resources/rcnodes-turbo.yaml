@@ -1,0 +1,155 @@
+# ---------------------------------------------------------------------------
+# 1. Tiny edge worker – 4-core low-power x86 box
+# ---------------------------------------------------------------------------
+apiVersion: recluster.com/v1alpha1
+kind: RcNode
+metadata:
+  name: tiny-edge-node
+  labels:
+    recluster.io/pool: edge
+spec:
+  roles: [K8S_WORKER]
+  nodePool: edge
+  address: 192.168.10.21               # management / BMC IP or FQDN
+  cpu:
+    architecture: AMD64
+    vendor: AMD
+    family: 23
+    model: 24
+    name: "AMD Ryzen Embedded V1605B"
+    cores: 4
+    flags: [sse4_2, avx2]
+    cacheL1d: 131072
+    cacheL1i: 131072
+    cacheL2: 2097152
+    cacheL3: 4194304
+    singleThreadScore: 420
+    multiThreadScore: 1500
+  memoryBytes: 8589934592              # 8 GiB
+  storages:
+    - name: nvme0n1
+      size: 512000000000               # 512 GB NVMe
+  interfaces:
+    - name: eth0
+      address: 00:1a:4b:00:00:21
+      speed: 1000000000                # 1 GbE
+      wol: [g]
+  # Power envelopes
+  minPowerConsumption: 30              # W  (idle)
+  maxPowerConsumption: 70              # W  (full load hard cap)
+  maxEfficiencyPowerConsumption: 55    # W  (sweet-spot budget)
+  powerCurve:
+    points:
+      - loadPct: 0
+        powerWatts: 30
+      - loadPct: 50
+        powerWatts: 50
+      - loadPct: 100
+        powerWatts: 70
+  bootSeconds: 60
+  desiredState: Running
+---
+# ---------------------------------------------------------------------------
+# 2. Balanced rack node – 16-core server that can host control-plane
+# ---------------------------------------------------------------------------
+apiVersion: recluster.com/v1alpha1
+kind: RcNode
+metadata:
+  name: balanced-node
+  labels:
+    recluster.io/pool: default
+spec:
+  roles: [K8S_CONTROLLER, K8S_WORKER]
+  nodePool: default
+  address: 192.168.20.42
+  cpu:
+    architecture: AMD64
+    vendor: INTEL
+    family: 6
+    model: 85
+    name: "Intel Xeon Silver 4314"
+    cores: 16
+    flags: [sse4_2, avx512f]
+    cacheL1d: 524288
+    cacheL1i: 524288
+    cacheL2: 4194304
+    cacheL3: 24576000
+    singleThreadScore: 650
+    multiThreadScore: 10500
+  memoryBytes: 34359738368             # 32 GiB
+  storages:
+    - name: sda
+      size: 1000000000000              # 1 TB SSD
+  interfaces:
+    - name: eno1
+      address: 3c:ec:ef:aa:bb:cc
+      speed: 10000000000               # 10 GbE
+      wol: [g]
+  minPowerConsumption: 60
+  maxEfficiencyPowerConsumption: 180
+  minPerformancePowerConsumption: 140
+  maxPowerConsumption: 220
+  powerCurve:
+    points:
+      - loadPct: 0
+        powerWatts: 60
+      - loadPct: 25
+        powerWatts: 100
+      - loadPct: 50
+        powerWatts: 140
+      - loadPct: 75
+        powerWatts: 180
+      - loadPct: 100
+        powerWatts: 220
+  bootSeconds: 90
+  desiredState: Running
+---
+# ---------------------------------------------------------------------------
+# 3. Energy-efficient ARM64 worker – 8 P-cores Graviton-class
+# ---------------------------------------------------------------------------
+apiVersion: recluster.com/v1alpha1
+kind: RcNode
+metadata:
+  name: arm-eff-node
+  labels:
+    recluster.io/pool: arm
+spec:
+  roles: [K8S_WORKER]
+  nodePool: arm
+  address: 192.168.30.11
+  cpu:
+    architecture: ARM64
+    vendor: AMD        # placeholder – update to actual vendor if needed
+    family: 8
+    model: 1
+    name: "Ampere Altra Q32-8"
+    cores: 8
+    flags: [asimd, crc32]
+    cacheL1d: 262144
+    cacheL1i: 262144
+    cacheL2: 4194304
+    cacheL3: 0
+    singleThreadScore: 500
+    multiThreadScore: 3700
+  memoryBytes: 17179869184             # 16 GiB
+  storages:
+    - name: nvme1n1
+      size: 256000000000               # 256 GB NVMe
+  interfaces:
+    - name: eth0
+      address: d2:5a:c3:dd:ee:ff
+      speed: 2500000000                # 2.5 GbE
+      wol: [g]
+  minPowerConsumption: 15
+  maxEfficiencyPowerConsumption: 65
+  maxPowerConsumption: 90
+  powerCurve:
+    points:
+      - loadPct: 0
+        powerWatts: 15
+      - loadPct: 50
+        powerWatts: 50
+      - loadPct: 100
+        powerWatts: 90
+  bootSeconds: 45
+  desiredState: Running

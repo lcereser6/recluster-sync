@@ -24,24 +24,24 @@ import (
 	gentype "k8s.io/client-go/gentype"
 )
 
-// fakeRcnodes implements RcnodeInterface
-type fakeRcnodes struct {
-	*gentype.FakeClientWithListAndApply[*v1alpha1.Rcnode, *v1alpha1.RcnodeList, *reclustercomv1alpha1.RcnodeApplyConfiguration]
+// fakeRcNodes implements RcNodeInterface
+type fakeRcNodes struct {
+	*gentype.FakeClientWithListAndApply[*v1alpha1.RcNode, *v1alpha1.RcNodeList, *reclustercomv1alpha1.RcNodeApplyConfiguration]
 	Fake *FakeReclusterV1alpha1
 }
 
-func newFakeRcnodes(fake *FakeReclusterV1alpha1, namespace string) typedreclustercomv1alpha1.RcnodeInterface {
-	return &fakeRcnodes{
-		gentype.NewFakeClientWithListAndApply[*v1alpha1.Rcnode, *v1alpha1.RcnodeList, *reclustercomv1alpha1.RcnodeApplyConfiguration](
+func newFakeRcNodes(fake *FakeReclusterV1alpha1, namespace string) typedreclustercomv1alpha1.RcNodeInterface {
+	return &fakeRcNodes{
+		gentype.NewFakeClientWithListAndApply[*v1alpha1.RcNode, *v1alpha1.RcNodeList, *reclustercomv1alpha1.RcNodeApplyConfiguration](
 			fake.Fake,
 			namespace,
 			v1alpha1.SchemeGroupVersion.WithResource("rcnodes"),
-			v1alpha1.SchemeGroupVersion.WithKind("Rcnode"),
-			func() *v1alpha1.Rcnode { return &v1alpha1.Rcnode{} },
-			func() *v1alpha1.RcnodeList { return &v1alpha1.RcnodeList{} },
-			func(dst, src *v1alpha1.RcnodeList) { dst.ListMeta = src.ListMeta },
-			func(list *v1alpha1.RcnodeList) []*v1alpha1.Rcnode { return gentype.ToPointerSlice(list.Items) },
-			func(list *v1alpha1.RcnodeList, items []*v1alpha1.Rcnode) {
+			v1alpha1.SchemeGroupVersion.WithKind("RcNode"),
+			func() *v1alpha1.RcNode { return &v1alpha1.RcNode{} },
+			func() *v1alpha1.RcNodeList { return &v1alpha1.RcNodeList{} },
+			func(dst, src *v1alpha1.RcNodeList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.RcNodeList) []*v1alpha1.RcNode { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1alpha1.RcNodeList, items []*v1alpha1.RcNode) {
 				list.Items = gentype.FromPointerSlice(items)
 			},
 		),

@@ -14,7 +14,7 @@ resources:
   controller: true
   domain: recluster.com
   group: recluster
-  kind: Rcnode
-  path: github.com/lcereser6/recluster-sync/api/v1alpha1
+  kind: RcNode
+  path: github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1
   version: v1alpha1
 version: "3"

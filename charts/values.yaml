@@ -1,4 +1,18 @@
+#values.yaml
 image:
-      repository: ghcr.io/lcereser6/recluster-sync
-      tag: dev
-      mode: kwok      # kwok | test | prod
+  repository: ghcr.io/lcereser6/recluster-sync
+  tag: dev
+  mode: kwok
+
+webhook:
+  enabled: true
+  createWebhook: true                  # <— add: let chart render the MWC
+  serviceName: recluster-sync-webhook
+  port: 443
+  targetPort: 9443
+  tls:
+    secretName: recluster-sync-webhook-tls
+    certPath: /tmp/k8s-webhook-server/serving-certs   # <— change to default path
+    certName: tls.crt
+    keyName: tls.key
+  caBundle: ""                         # <— add: set to Secret’s ca.crt (base64)

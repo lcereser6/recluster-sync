@@ -23,10 +23,10 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// RcNodes returns a RcNodeInformer.
+	RcNodes() RcNodeInformer
 	// RcPolicies returns a RcPolicyInformer.
 	RcPolicies() RcPolicyInformer
-	// Rcnodes returns a RcnodeInformer.
-	Rcnodes() RcnodeInformer
 }
 
 type version struct {
@@ -40,12 +40,12 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
+// RcNodes returns a RcNodeInformer.
+func (v *version) RcNodes() RcNodeInformer {
+	return &rcNodeInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
 // RcPolicies returns a RcPolicyInformer.
 func (v *version) RcPolicies() RcPolicyInformer {
 	return &rcPolicyInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// Rcnodes returns a RcnodeInformer.
-func (v *version) Rcnodes() RcnodeInformer {
-	return &rcnodeInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

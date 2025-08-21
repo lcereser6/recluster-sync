@@ -24,9 +24,11 @@ import (
 // RcPolicySpecApplyConfiguration represents a declarative configuration of the RcPolicySpec type for use
 // with apply.
 type RcPolicySpecApplyConfiguration struct {
-	Selector        *v1.LabelSelectorApplyConfiguration  `json:"selector,omitempty"`
-	Metrics         []PolicyMetricApplyConfiguration     `json:"metrics,omitempty"`
-	HardConstraints []PolicyConstraintApplyConfiguration `json:"hardConstraints,omitempty"`
+	Selector        *v1.LabelSelectorApplyConfiguration     `json:"selector,omitempty"`
+	Metrics         []PolicyMetricApplyConfiguration        `json:"metrics,omitempty"`
+	HardConstraints []PolicyConstraintApplyConfiguration    `json:"hardConstraints,omitempty"`
+	Schedule        []PolicyScheduleEntryApplyConfiguration `json:"schedule,omitempty"`
+	ExternalFeeds   []ExternalFeedRefApplyConfiguration     `json:"externalFeeds,omitempty"`
 }
 
 // RcPolicySpecApplyConfiguration constructs a declarative configuration of the RcPolicySpec type for use with
@@ -65,6 +67,32 @@ func (b *RcPolicySpecApplyConfiguration) WithHardConstraints(values ...*PolicyCo
 			panic("nil value passed to WithHardConstraints")
 		}
 		b.HardConstraints = append(b.HardConstraints, *values[i])
+	}
+	return b
+}
+
+// WithSchedule adds the given value to the Schedule field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Schedule field.
+func (b *RcPolicySpecApplyConfiguration) WithSchedule(values ...*PolicyScheduleEntryApplyConfiguration) *RcPolicySpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithSchedule")
+		}
+		b.Schedule = append(b.Schedule, *values[i])
+	}
+	return b
+}
+
+// WithExternalFeeds adds the given value to the ExternalFeeds field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ExternalFeeds field.
+func (b *RcPolicySpecApplyConfiguration) WithExternalFeeds(values ...*ExternalFeedRefApplyConfiguration) *RcPolicySpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithExternalFeeds")
+		}
+		b.ExternalFeeds = append(b.ExternalFeeds, *values[i])
 	}
 	return b
 }

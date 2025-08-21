@@ -13,13 +13,13 @@ echo "Running code generation for recluster-sync..."
 
 source "${CODEGEN_PKG}/kube_codegen.sh"
 
-echo "Generating helpers for RCNODES AND RCPOLICIES CRD..."
+echo "Generating helpers ..."
 
 kube::codegen::gen_helpers \
     --boilerplate hack/boilerplate.go.txt \
     "${REPO_ROOT}/apis/recluster.com/v1alpha1"
 
-echo "Generating client code for RCNODES AND RCPOLICIES CRD..."
+echo "Generating client code ..."
 
 kube::codegen::gen_client \
     --output-pkg github.com/lcereser6/recluster-sync/apis/client \

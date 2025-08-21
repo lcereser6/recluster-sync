@@ -17,6 +17,14 @@ limitations under the License.
 
 package v1alpha1
 
+// RcNodeListerExpansion allows custom methods to be added to
+// RcNodeLister.
+type RcNodeListerExpansion interface{}
+
+// RcNodeNamespaceListerExpansion allows custom methods to be added to
+// RcNodeNamespaceLister.
+type RcNodeNamespaceListerExpansion interface{}
+
 // RcPolicyListerExpansion allows custom methods to be added to
 // RcPolicyLister.
 type RcPolicyListerExpansion interface{}
@@ -24,11 +32,3 @@ type RcPolicyListerExpansion interface{}
 // RcPolicyNamespaceListerExpansion allows custom methods to be added to
 // RcPolicyNamespaceLister.
 type RcPolicyNamespaceListerExpansion interface{}
-
-// RcnodeListerExpansion allows custom methods to be added to
-// RcnodeLister.
-type RcnodeListerExpansion interface{}
-
-// RcnodeNamespaceListerExpansion allows custom methods to be added to
-// RcnodeNamespaceLister.
-type RcnodeNamespaceListerExpansion interface{}

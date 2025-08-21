@@ -1,5 +1,5 @@
 apiVersion: recluster.com/v1alpha1
-kind: Rcnode
+kind: RcNode
 metadata:
   labels:
     app.kubernetes.io/name: recluster-sync

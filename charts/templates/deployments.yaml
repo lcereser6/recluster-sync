@@ -1,3 +1,4 @@
+#deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,17 +25,26 @@ spec:
         - name: controller
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
+          #args:
+          #  - --webhook-cert-path={{ .Values.webhook.tls.certPath }}
+          #  - --webhook-cert-name={{ .Values.webhook.tls.certName }}
+          #  - --webhook-cert-key={{ .Values.webhook.tls.keyName }}
+          ports:
+            - name: https-webhook
+              containerPort: 9443
           env:
-            # which backend to use: kwok | test | prod
-            - name: MODE
+            - name: RECLUSTER_BACKEND_MODE
               value: "{{ .Values.image.mode }}"
-            # optional: log level override
             - name: LOG_LEVEL
               value: "info"
+          volumeMounts:
+            - name: webhook-certs
+              mountPath: /tmp/k8s-webhook-server/serving-certs
+              readOnly: true
           resources:
-            limits:
-              cpu: 100m
-              memory: 128Mi
-            requests:
-              cpu: 50m
-              memory: 64Mi
+            limits: { cpu: 100m, memory: 128Mi }
+            requests: { cpu: 50m, memory: 64Mi }
+      volumes:
+        - name: webhook-certs
+          secret:
+            secretName: {{ .Values.webhook.tls.secretName }}

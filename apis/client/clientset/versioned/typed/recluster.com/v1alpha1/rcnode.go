@@ -29,45 +29,45 @@ import (
 	gentype "k8s.io/client-go/gentype"
 )
 
-// RcnodesGetter has a method to return a RcnodeInterface.
+// RcNodesGetter has a method to return a RcNodeInterface.
 // A group's client should implement this interface.
-type RcnodesGetter interface {
-	Rcnodes(namespace string) RcnodeInterface
+type RcNodesGetter interface {
+	RcNodes(namespace string) RcNodeInterface
 }
 
-// RcnodeInterface has methods to work with Rcnode resources.
-type RcnodeInterface interface {
-	Create(ctx context.Context, rcnode *reclustercomv1alpha1.Rcnode, opts v1.CreateOptions) (*reclustercomv1alpha1.Rcnode, error)
-	Update(ctx context.Context, rcnode *reclustercomv1alpha1.Rcnode, opts v1.UpdateOptions) (*reclustercomv1alpha1.Rcnode, error)
+// RcNodeInterface has methods to work with RcNode resources.
+type RcNodeInterface interface {
+	Create(ctx context.Context, rcNode *reclustercomv1alpha1.RcNode, opts v1.CreateOptions) (*reclustercomv1alpha1.RcNode, error)
+	Update(ctx context.Context, rcNode *reclustercomv1alpha1.RcNode, opts v1.UpdateOptions) (*reclustercomv1alpha1.RcNode, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, rcnode *reclustercomv1alpha1.Rcnode, opts v1.UpdateOptions) (*reclustercomv1alpha1.Rcnode, error)
+	UpdateStatus(ctx context.Context, rcNode *reclustercomv1alpha1.RcNode, opts v1.UpdateOptions) (*reclustercomv1alpha1.RcNode, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*reclustercomv1alpha1.Rcnode, error)
-	List(ctx context.Context, opts v1.ListOptions) (*reclustercomv1alpha1.RcnodeList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*reclustercomv1alpha1.RcNode, error)
+	List(ctx context.Context, opts v1.ListOptions) (*reclustercomv1alpha1.RcNodeList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *reclustercomv1alpha1.Rcnode, err error)
-	Apply(ctx context.Context, rcnode *applyconfigurationreclustercomv1alpha1.RcnodeApplyConfiguration, opts v1.ApplyOptions) (result *reclustercomv1alpha1.Rcnode, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *reclustercomv1alpha1.RcNode, err error)
+	Apply(ctx context.Context, rcNode *applyconfigurationreclustercomv1alpha1.RcNodeApplyConfiguration, opts v1.ApplyOptions) (result *reclustercomv1alpha1.RcNode, err error)
 	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-	ApplyStatus(ctx context.Context, rcnode *applyconfigurationreclustercomv1alpha1.RcnodeApplyConfiguration, opts v1.ApplyOptions) (result *reclustercomv1alpha1.Rcnode, err error)
-	RcnodeExpansion
+	ApplyStatus(ctx context.Context, rcNode *applyconfigurationreclustercomv1alpha1.RcNodeApplyConfiguration, opts v1.ApplyOptions) (result *reclustercomv1alpha1.RcNode, err error)
+	RcNodeExpansion
 }
 
-// rcnodes implements RcnodeInterface
-type rcnodes struct {
-	*gentype.ClientWithListAndApply[*reclustercomv1alpha1.Rcnode, *reclustercomv1alpha1.RcnodeList, *applyconfigurationreclustercomv1alpha1.RcnodeApplyConfiguration]
+// rcNodes implements RcNodeInterface
+type rcNodes struct {
+	*gentype.ClientWithListAndApply[*reclustercomv1alpha1.RcNode, *reclustercomv1alpha1.RcNodeList, *applyconfigurationreclustercomv1alpha1.RcNodeApplyConfiguration]
 }
 
-// newRcnodes returns a Rcnodes
-func newRcnodes(c *ReclusterV1alpha1Client, namespace string) *rcnodes {
-	return &rcnodes{
-		gentype.NewClientWithListAndApply[*reclustercomv1alpha1.Rcnode, *reclustercomv1alpha1.RcnodeList, *applyconfigurationreclustercomv1alpha1.RcnodeApplyConfiguration](
+// newRcNodes returns a RcNodes
+func newRcNodes(c *ReclusterV1alpha1Client, namespace string) *rcNodes {
+	return &rcNodes{
+		gentype.NewClientWithListAndApply[*reclustercomv1alpha1.RcNode, *reclustercomv1alpha1.RcNodeList, *applyconfigurationreclustercomv1alpha1.RcNodeApplyConfiguration](
 			"rcnodes",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *reclustercomv1alpha1.Rcnode { return &reclustercomv1alpha1.Rcnode{} },
-			func() *reclustercomv1alpha1.RcnodeList { return &reclustercomv1alpha1.RcnodeList{} },
+			func() *reclustercomv1alpha1.RcNode { return &reclustercomv1alpha1.RcNode{} },
+			func() *reclustercomv1alpha1.RcNodeList { return &reclustercomv1alpha1.RcNodeList{} },
 		),
 	}
 }

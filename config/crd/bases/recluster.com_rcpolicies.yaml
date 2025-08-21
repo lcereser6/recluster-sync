@@ -37,40 +37,128 @@ spec:
             type: object
           spec:
             properties:
+              externalFeeds:
+                description: |-
+                  Optional external inputs (spot‑price feeds, carbon intensity APIs…).
+                  Each feed is fetched by the controller; its numeric output is passed to
+                  a CEL transform that yields per‑metric multipliers.
+                items:
+                  properties:
+                    mappings:
+                      description: |-
+                        How each metric reacts to the feed value – a CEL expression that receives
+                        the variable `$value` (float64) and outputs the multiplier.
+                        e.g.  multiplier = 1 + ($value / 100)   // raise cost when price high
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          transform:
+                            type: string
+                        required:
+                        - key
+                        - transform
+                        type: object
+                      type: array
+                    name:
+                      type: string
+                    url:
+                      type: string
+                  required:
+                  - mappings
+                  - name
+                  - url
+                  type: object
+                type: array
               hardConstraints:
+                description: |-
+                  Hard constraints – CEL expressions evaluated per candidate assignment.
+                  If any evaluates to *false* the node is rejected.
                 items:
                   properties:
                     expression:
-                      description: CEL expression that must evaluate to true on a
-                        candidate assignment.
                       type: string
                   required:
                   - expression
                   type: object
                 type: array
               metrics:
-                description: Metrics & hard-constraints will be consumed by the solver
-                  in Task 2.
+                description: List of metrics that feed the scoring function.
                 items:
                   properties:
                     key:
-                      description: Data-point name exposed by RcNode / telemetry.
+                      description: Key is just a symbolic handle used by policies/schedule/feed
+                        mappings.
+                      type: string
+                    selector:
+                      type: string
+                    source:
+                      description: |-
+                        Source + Selector tell the runtime *where* to fetch the value.
+                        Example (jsonPath):   $.status.predictedPowerWatts
+                        Example (fieldPath):  metadata.labels['topology.kubernetes.io/zone']
                       type: string
                     transform:
-                      description: Optional CEL transform (Task 2).
+                      description: |-
+                        Optional CEL transform executed *after* the value is fetched and before
+                        weighting. Use this for unit conversions or capping.
+                        e.g. "min(x, 180)" where `x` is the fetched value.
                       type: string
                     weight:
-                      description: Weight (positive = minimise, negative = maximise).
+                      description: |-
+                        Weight – if you stick to the weighted‑sum model, positive means
+                        “*minimise* this metric”, negative means “*maximise*”.
+                        If you switch to lexicographic ordering the runtime can ignore it.
                       type: number
                   required:
                   - key
                   - weight
                   type: object
                 type: array
+              schedule:
+                description: |-
+                  Optional time‑based overrides.
+                  The first entry whose window contains *now()* overrides the base metric
+                  definitions (weight/multiplier). Think of them as “profiles”.
+                items:
+                  properties:
+                    adjustments:
+                      description: |-
+                        Adjustments: either *replace* the weight or *multiply* it.
+                        If both are set, Replace takes precedence.
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          multiply:
+                            type: number
+                          replace:
+                            type: number
+                        required:
+                        - key
+                        type: object
+                      type: array
+                    end:
+                      type: string
+                    name:
+                      description: Name is only for human debugging.
+                      type: string
+                    start:
+                      description: |-
+                        Start & End – 24‑hour clock in "HH:MM" (e.g. "22:00").
+                        The window is inclusive of Start and exclusive of End.
+                      type: string
+                  required:
+                  - adjustments
+                  - end
+                  - name
+                  - start
+                  type: object
+                type: array
               selector:
                 description: |-
-                  Selector matches Pods that should use this policy.
-                  Omit to designate this as the *cluster-default* policy.
+                  selector matches Pods that *use* this policy.
+                  If nil, the policy is considered the cluster‑default.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements.
@@ -120,6 +208,10 @@ spec:
             type: object
           status:
             properties:
+              lastFeedSync:
+                description: Last time an external feed was updated.
+                format: date-time
+                type: string
               lastResolved:
                 format: date-time
                 type: string

@@ -1,48 +1,28 @@
+// internal/state/types.go
+//
+// Central “live view” interface for recluster-sync.
+//
+// * It is **read-only**: callers can list objects but must not mutate them.
+// * It embeds controller-runtime’s manager.Runnable, so main.go can simply
+//   `mgr.Add(stateObj)` and the cache will be started / stopped with the
+//   controller-manager.
+// * All accessor methods must be **thread-safe** – they can be invoked from
+//   any goroutine once Start(ctx) has returned.
+
 package state
 
 import (
-	"context"
-	"time"
-
-	rcv1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
-
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
 )
 
-const resyncPeriod = 5 * time.Minute
-
-// New returns a ready-to-start State. Use the same *rest.Config the
-// controller already has.
-func New(cfg *rest.Config) (State, error) {
-	k8sClient, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	dyn, err := dynamic.NewForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return &impl{
-		k8s:    k8sClient,
-		dyn:    dyn,
-		scheme: runtime.NewScheme(), // not strictly needed yet
-	}, nil
-}
-
-/* -------------------------- interface definition ------------------------- */
-
+// State is a read-only, informer-driven cache of live objects.
 type State interface {
-	Start(ctx context.Context) error
+	manager.Runnable // <- Start(ctx) will be called by ctrl-manager
 
-	RcNodes() []rcv1.Rcnode
-	UnschedulablePods() []corev1.Pod
-	PodByKey(key types.NamespacedName) *corev1.Pod
-
-	UpdatePodAnnotations(pod *corev1.Pod, add map[string]string) error
+	Pods() []*corev1.Pod
+	RcNodes() []*reclusterv1alpha1.RcNode
+	RcPolicies() []*reclusterv1alpha1.RcPolicy
 }

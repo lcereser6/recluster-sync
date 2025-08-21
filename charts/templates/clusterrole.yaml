@@ -3,12 +3,14 @@ kind: ClusterRole
 metadata:
   name: {{ include "recluster-sync.fullname" . }}
 rules:
-  # ► watch / manage Rcnode CRDs
+  # ► watch / manage RcNode CRDs
   - apiGroups: 
     - recluster.com
     resources: 
     - rcnodes
     - rcnodes/status
+    - rcpolicies
+    - rcpolicies/status
     verbs: 
     - get
     - list

@@ -17,22 +17,108 @@ limitations under the License.
 
 package v1alpha1
 
-// RcnodeStatusApplyConfiguration represents a declarative configuration of the RcnodeStatus type for use
+import (
+	reclustercomv1alpha1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+// RcNodeStatusApplyConfiguration represents a declarative configuration of the RcNodeStatus type for use
 // with apply.
-type RcnodeStatusApplyConfiguration struct {
-	State *string `json:"state,omitempty"`
+type RcNodeStatusApplyConfiguration struct {
+	State               *reclustercomv1alpha1.NodeStatus `json:"state,omitempty"`
+	Reason              *string                          `json:"reason,omitempty"`
+	Message             *string                          `json:"message,omitempty"`
+	LastHeartbeat       *v1.Time                         `json:"lastHeartbeat,omitempty"`
+	LastTransition      *v1.Time                         `json:"lastTransition,omitempty"`
+	NodePoolAssigned    *bool                            `json:"nodePoolAssigned,omitempty"`
+	UtilizationMilliCPU *int                             `json:"utilizationMilliCPU,omitempty"`
+	UtilizationPct      *float64                         `json:"utilizationPct,omitempty"`
+	PredictedPowerWatts *int                             `json:"predictedPowerWatts,omitempty"`
+	ObservedPowerWatts  *int                             `json:"observedPowerWatts,omitempty"`
 }
 
-// RcnodeStatusApplyConfiguration constructs a declarative configuration of the RcnodeStatus type for use with
+// RcNodeStatusApplyConfiguration constructs a declarative configuration of the RcNodeStatus type for use with
 // apply.
-func RcnodeStatus() *RcnodeStatusApplyConfiguration {
-	return &RcnodeStatusApplyConfiguration{}
+func RcNodeStatus() *RcNodeStatusApplyConfiguration {
+	return &RcNodeStatusApplyConfiguration{}
 }
 
 // WithState sets the State field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the State field is set to the value of the last call.
-func (b *RcnodeStatusApplyConfiguration) WithState(value string) *RcnodeStatusApplyConfiguration {
+func (b *RcNodeStatusApplyConfiguration) WithState(value reclustercomv1alpha1.NodeStatus) *RcNodeStatusApplyConfiguration {
 	b.State = &value
+	return b
+}
+
+// WithReason sets the Reason field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Reason field is set to the value of the last call.
+func (b *RcNodeStatusApplyConfiguration) WithReason(value string) *RcNodeStatusApplyConfiguration {
+	b.Reason = &value
+	return b
+}
+
+// WithMessage sets the Message field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Message field is set to the value of the last call.
+func (b *RcNodeStatusApplyConfiguration) WithMessage(value string) *RcNodeStatusApplyConfiguration {
+	b.Message = &value
+	return b
+}
+
+// WithLastHeartbeat sets the LastHeartbeat field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LastHeartbeat field is set to the value of the last call.
+func (b *RcNodeStatusApplyConfiguration) WithLastHeartbeat(value v1.Time) *RcNodeStatusApplyConfiguration {
+	b.LastHeartbeat = &value
+	return b
+}
+
+// WithLastTransition sets the LastTransition field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LastTransition field is set to the value of the last call.
+func (b *RcNodeStatusApplyConfiguration) WithLastTransition(value v1.Time) *RcNodeStatusApplyConfiguration {
+	b.LastTransition = &value
+	return b
+}
+
+// WithNodePoolAssigned sets the NodePoolAssigned field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NodePoolAssigned field is set to the value of the last call.
+func (b *RcNodeStatusApplyConfiguration) WithNodePoolAssigned(value bool) *RcNodeStatusApplyConfiguration {
+	b.NodePoolAssigned = &value
+	return b
+}
+
+// WithUtilizationMilliCPU sets the UtilizationMilliCPU field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UtilizationMilliCPU field is set to the value of the last call.
+func (b *RcNodeStatusApplyConfiguration) WithUtilizationMilliCPU(value int) *RcNodeStatusApplyConfiguration {
+	b.UtilizationMilliCPU = &value
+	return b
+}
+
+// WithUtilizationPct sets the UtilizationPct field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UtilizationPct field is set to the value of the last call.
+func (b *RcNodeStatusApplyConfiguration) WithUtilizationPct(value float64) *RcNodeStatusApplyConfiguration {
+	b.UtilizationPct = &value
+	return b
+}
+
+// WithPredictedPowerWatts sets the PredictedPowerWatts field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PredictedPowerWatts field is set to the value of the last call.
+func (b *RcNodeStatusApplyConfiguration) WithPredictedPowerWatts(value int) *RcNodeStatusApplyConfiguration {
+	b.PredictedPowerWatts = &value
+	return b
+}
+
+// WithObservedPowerWatts sets the ObservedPowerWatts field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ObservedPowerWatts field is set to the value of the last call.
+func (b *RcNodeStatusApplyConfiguration) WithObservedPowerWatts(value int) *RcNodeStatusApplyConfiguration {
+	b.ObservedPowerWatts = &value
 	return b
 }

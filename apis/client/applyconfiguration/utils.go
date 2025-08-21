@@ -31,16 +31,34 @@ import (
 func ForKind(kind schema.GroupVersionKind) interface{} {
 	switch kind {
 	// Group=recluster.com, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithKind("ExternalFeedRef"):
+		return &reclustercomv1alpha1.ExternalFeedRefApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("FeedMetricMapping"):
+		return &reclustercomv1alpha1.FeedMetricMappingApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("MetricAdjustment"):
+		return &reclustercomv1alpha1.MetricAdjustmentApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PolicyConstraint"):
 		return &reclustercomv1alpha1.PolicyConstraintApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PolicyMetric"):
 		return &reclustercomv1alpha1.PolicyMetricApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("Rcnode"):
-		return &reclustercomv1alpha1.RcnodeApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("RcnodeSpec"):
-		return &reclustercomv1alpha1.RcnodeSpecApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("RcnodeStatus"):
-		return &reclustercomv1alpha1.RcnodeStatusApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("PolicyScheduleEntry"):
+		return &reclustercomv1alpha1.PolicyScheduleEntryApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RcNode"):
+		return &reclustercomv1alpha1.RcNodeApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RcNodeCPUSpec"):
+		return &reclustercomv1alpha1.RcNodeCPUSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RcNodeInterfaceSpec"):
+		return &reclustercomv1alpha1.RcNodeInterfaceSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RcNodePowerCurvePoint"):
+		return &reclustercomv1alpha1.RcNodePowerCurvePointApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RcNodePowerCurveSpec"):
+		return &reclustercomv1alpha1.RcNodePowerCurveSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RcNodeSpec"):
+		return &reclustercomv1alpha1.RcNodeSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RcNodeStatus"):
+		return &reclustercomv1alpha1.RcNodeStatusApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RcNodeStorageSpec"):
+		return &reclustercomv1alpha1.RcNodeStorageSpecApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("RcPolicy"):
 		return &reclustercomv1alpha1.RcPolicyApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("RcPolicySpec"):

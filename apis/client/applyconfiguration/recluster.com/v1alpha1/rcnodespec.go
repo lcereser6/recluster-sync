@@ -17,42 +17,158 @@ limitations under the License.
 
 package v1alpha1
 
-// RcnodeSpecApplyConfiguration represents a declarative configuration of the RcnodeSpec type for use
+import (
+	reclustercomv1alpha1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
+)
+
+// RcNodeSpecApplyConfiguration represents a declarative configuration of the RcNodeSpec type for use
 // with apply.
-type RcnodeSpecApplyConfiguration struct {
-	CPUCores     *int    `json:"cpuCores,omitempty"`
-	MemoryGiB    *int    `json:"memoryGiB,omitempty"`
-	BootSeconds  *int    `json:"bootSeconds,omitempty"`
-	DesiredState *string `json:"desiredState,omitempty"`
-	Foo          *string `json:"foo,omitempty"`
+type RcNodeSpecApplyConfiguration struct {
+	Roles                          []reclustercomv1alpha1.NodeRole         `json:"roles,omitempty"`
+	Permissions                    []reclustercomv1alpha1.NodePermission   `json:"permissions,omitempty"`
+	NodePool                       *string                                 `json:"nodePool,omitempty"`
+	Address                        *string                                 `json:"address,omitempty"`
+	CPU                            *RcNodeCPUSpecApplyConfiguration        `json:"cpu,omitempty"`
+	Memory                         *int64                                  `json:"memoryBytes,omitempty"`
+	Storage                        []RcNodeStorageSpecApplyConfiguration   `json:"storages,omitempty"`
+	Network                        []RcNodeInterfaceSpecApplyConfiguration `json:"interfaces,omitempty"`
+	MinPowerConsumption            *int                                    `json:"minPowerConsumption,omitempty"`
+	MaxEfficiencyPowerConsumption  *int                                    `json:"maxEfficiencyPowerConsumption,omitempty"`
+	MinPerformancePowerConsumption *int                                    `json:"minPerformancePowerConsumption,omitempty"`
+	MaxPowerConsumption            *int                                    `json:"maxPowerConsumption,omitempty"`
+	PowerCurve                     *RcNodePowerCurveSpecApplyConfiguration `json:"powerCurve,omitempty"`
+	BootSeconds                    *int                                    `json:"bootSeconds,omitempty"`
+	DesiredState                   *string                                 `json:"desiredState,omitempty"`
 }
 
-// RcnodeSpecApplyConfiguration constructs a declarative configuration of the RcnodeSpec type for use with
+// RcNodeSpecApplyConfiguration constructs a declarative configuration of the RcNodeSpec type for use with
 // apply.
-func RcnodeSpec() *RcnodeSpecApplyConfiguration {
-	return &RcnodeSpecApplyConfiguration{}
+func RcNodeSpec() *RcNodeSpecApplyConfiguration {
+	return &RcNodeSpecApplyConfiguration{}
 }
 
-// WithCPUCores sets the CPUCores field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the CPUCores field is set to the value of the last call.
-func (b *RcnodeSpecApplyConfiguration) WithCPUCores(value int) *RcnodeSpecApplyConfiguration {
-	b.CPUCores = &value
+// WithRoles adds the given value to the Roles field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Roles field.
+func (b *RcNodeSpecApplyConfiguration) WithRoles(values ...reclustercomv1alpha1.NodeRole) *RcNodeSpecApplyConfiguration {
+	for i := range values {
+		b.Roles = append(b.Roles, values[i])
+	}
 	return b
 }
 
-// WithMemoryGiB sets the MemoryGiB field in the declarative configuration to the given value
+// WithPermissions adds the given value to the Permissions field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Permissions field.
+func (b *RcNodeSpecApplyConfiguration) WithPermissions(values ...reclustercomv1alpha1.NodePermission) *RcNodeSpecApplyConfiguration {
+	for i := range values {
+		b.Permissions = append(b.Permissions, values[i])
+	}
+	return b
+}
+
+// WithNodePool sets the NodePool field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the MemoryGiB field is set to the value of the last call.
-func (b *RcnodeSpecApplyConfiguration) WithMemoryGiB(value int) *RcnodeSpecApplyConfiguration {
-	b.MemoryGiB = &value
+// If called multiple times, the NodePool field is set to the value of the last call.
+func (b *RcNodeSpecApplyConfiguration) WithNodePool(value string) *RcNodeSpecApplyConfiguration {
+	b.NodePool = &value
+	return b
+}
+
+// WithAddress sets the Address field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Address field is set to the value of the last call.
+func (b *RcNodeSpecApplyConfiguration) WithAddress(value string) *RcNodeSpecApplyConfiguration {
+	b.Address = &value
+	return b
+}
+
+// WithCPU sets the CPU field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the CPU field is set to the value of the last call.
+func (b *RcNodeSpecApplyConfiguration) WithCPU(value *RcNodeCPUSpecApplyConfiguration) *RcNodeSpecApplyConfiguration {
+	b.CPU = value
+	return b
+}
+
+// WithMemory sets the Memory field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Memory field is set to the value of the last call.
+func (b *RcNodeSpecApplyConfiguration) WithMemory(value int64) *RcNodeSpecApplyConfiguration {
+	b.Memory = &value
+	return b
+}
+
+// WithStorage adds the given value to the Storage field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Storage field.
+func (b *RcNodeSpecApplyConfiguration) WithStorage(values ...*RcNodeStorageSpecApplyConfiguration) *RcNodeSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithStorage")
+		}
+		b.Storage = append(b.Storage, *values[i])
+	}
+	return b
+}
+
+// WithNetwork adds the given value to the Network field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Network field.
+func (b *RcNodeSpecApplyConfiguration) WithNetwork(values ...*RcNodeInterfaceSpecApplyConfiguration) *RcNodeSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithNetwork")
+		}
+		b.Network = append(b.Network, *values[i])
+	}
+	return b
+}
+
+// WithMinPowerConsumption sets the MinPowerConsumption field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MinPowerConsumption field is set to the value of the last call.
+func (b *RcNodeSpecApplyConfiguration) WithMinPowerConsumption(value int) *RcNodeSpecApplyConfiguration {
+	b.MinPowerConsumption = &value
+	return b
+}
+
+// WithMaxEfficiencyPowerConsumption sets the MaxEfficiencyPowerConsumption field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MaxEfficiencyPowerConsumption field is set to the value of the last call.
+func (b *RcNodeSpecApplyConfiguration) WithMaxEfficiencyPowerConsumption(value int) *RcNodeSpecApplyConfiguration {
+	b.MaxEfficiencyPowerConsumption = &value
+	return b
+}
+
+// WithMinPerformancePowerConsumption sets the MinPerformancePowerConsumption field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MinPerformancePowerConsumption field is set to the value of the last call.
+func (b *RcNodeSpecApplyConfiguration) WithMinPerformancePowerConsumption(value int) *RcNodeSpecApplyConfiguration {
+	b.MinPerformancePowerConsumption = &value
+	return b
+}
+
+// WithMaxPowerConsumption sets the MaxPowerConsumption field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MaxPowerConsumption field is set to the value of the last call.
+func (b *RcNodeSpecApplyConfiguration) WithMaxPowerConsumption(value int) *RcNodeSpecApplyConfiguration {
+	b.MaxPowerConsumption = &value
+	return b
+}
+
+// WithPowerCurve sets the PowerCurve field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PowerCurve field is set to the value of the last call.
+func (b *RcNodeSpecApplyConfiguration) WithPowerCurve(value *RcNodePowerCurveSpecApplyConfiguration) *RcNodeSpecApplyConfiguration {
+	b.PowerCurve = value
 	return b
 }
 
 // WithBootSeconds sets the BootSeconds field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BootSeconds field is set to the value of the last call.
-func (b *RcnodeSpecApplyConfiguration) WithBootSeconds(value int) *RcnodeSpecApplyConfiguration {
+func (b *RcNodeSpecApplyConfiguration) WithBootSeconds(value int) *RcNodeSpecApplyConfiguration {
 	b.BootSeconds = &value
 	return b
 }
@@ -60,15 +176,7 @@ func (b *RcnodeSpecApplyConfiguration) WithBootSeconds(value int) *RcnodeSpecApp
 // WithDesiredState sets the DesiredState field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the DesiredState field is set to the value of the last call.
-func (b *RcnodeSpecApplyConfiguration) WithDesiredState(value string) *RcnodeSpecApplyConfiguration {
+func (b *RcNodeSpecApplyConfiguration) WithDesiredState(value string) *RcNodeSpecApplyConfiguration {
 	b.DesiredState = &value
-	return b
-}
-
-// WithFoo sets the Foo field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Foo field is set to the value of the last call.
-func (b *RcnodeSpecApplyConfiguration) WithFoo(value string) *RcnodeSpecApplyConfiguration {
-	b.Foo = &value
 	return b
 }

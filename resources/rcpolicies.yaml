@@ -1,0 +1,87 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. Cheap-Power-Night
+#    • Any Pod with label pricing=spot prefers the node that MINIMISES
+#      predicted power draw.
+#    • Between 22:00 and 06:00 the weight is DOUBLED, pushing even harder
+#      toward low-Watts nodes when electricity is expensive.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: recluster.com/v1alpha1
+kind: RcPolicy
+metadata:
+  name: cheap-power-night
+spec:
+  selector:
+    matchLabels:
+      pricing: spot
+  metrics:
+    - key: watts
+      weight: 0.5
+      selector: $.status.predictedPowerWatts
+  schedule:
+    - name: high-tariff-hours
+      start: "22:00"
+      end:   "06:00"
+      adjustments:
+        - key: watts
+          multiply: 2        # effective weight = 1.0 during window
+    
+---
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. Carbon-Aware
+#    • Matches Pods labelled env=prod.
+#    • Pulls real-time carbon intensity (gCO₂/kWh) from ElectricityMap.
+#    • The CEL mapping turns the feed into a multiplier:
+#          multiplier = 1 + ($value / 1000)
+#      e.g. 400 gCO₂ → ×1.4 penalty on Watts weight.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: recluster.com/v1alpha1
+kind: RcPolicy
+metadata:
+  name: carbon-aware
+spec:
+  selector:
+    matchLabels:
+      env: prod
+  metrics:
+    - key: watts
+      weight: 1
+      selector: $.status.predictedPowerWatts
+  externalFeeds:
+    - name: carbon-intensity
+      url:  https://api.electricitymap.org/v3/carbon-intensity/latest?zone=IT
+      mappings:
+        - key: watts
+          transform: "1 + ($value / 1000)"   # CEL, $value is feed reading
+  hardConstraints:
+    - expression: "status.predictedPowerWatts <= spec.maxPowerConsumption"
+---
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. Fast-Start-Edge
+#    • Default (cluster-wide) policy for tiny edge nodes.
+#    • Strongly minimises boot time; ties broken by fewest CPU cores.
+#    • During business hours (08:00-18:00) we RELAX the boot-time weight
+#      so scheduling is more even.
+#    • Rejects any node with < 4 GiB RAM.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: recluster.com/v1alpha1
+kind: RcPolicy
+metadata:
+  name: fast-start-edge
+spec:
+  # selector omitted ⇒ cluster-default
+  metrics:
+    - key: boot
+      weight: 1
+      selector: $.spec.bootSeconds
+    - key: cores
+      weight: 0.2
+      selector: $.spec.cpu.cores
+  schedule:
+    - name: business-hours
+      start: "08:00"
+      end:   "18:00"
+      adjustments:
+        - key: boot
+          multiply: 0.5      # effective weight = 0.5
+  hardConstraints:
+    - expression: "spec.memoryBytes >= 4 * 1024 * 1024 * 1024"

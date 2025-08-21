@@ -1,12 +1,20 @@
-/*
-Copyright 2025.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-*/
+// cmd/main.go
+//
+// Entry-point for the *recluster-sync* controller-manager.
+//
+// The binary is completely self-contained – it will:
+//
+//   • parse CLI flags (metrics, probes, TLS, leader-election …)
+//   • wire an optional certificate hot-reloader for both webhook & metrics
+//   • disable HTTP/2 unless the operator explicitly enables it
+//   • spin-up controller-runtime’s manager with the custom Scheme
+//   • start the live *State* cache (internal/state)
+//   • register the RcNode reconciler (and any future controllers)
+//   • expose /healthz & /readyz endpoints
+//
+// Every important step is logged with a **single, unambiguous** message so that
+// `kubectl logs` (or a structured log pipeline) can show a linear story of the
+// process-lifecycle.
 
 package main
 
@@ -15,8 +23,10 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strconv"
 
-	_ "k8s.io/client-go/plugin/pkg/client/auth" // auth providers
+	"k8s.io/client-go/kubernetes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth" // enable e.g. GCP, OIDC, Azure …
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -31,180 +41,211 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	reclusterv1alpha1 "github.com/lcereser6/recluster-sync/apis/recluster.com/v1alpha1"
+	"github.com/lcereser6/recluster-sync/internal/backend"
 	"github.com/lcereser6/recluster-sync/internal/controller"
-	"github.com/lcereser6/recluster-sync/internal/state" // *** NEW ***
+	"github.com/lcereser6/recluster-sync/internal/state"
+	wh "github.com/lcereser6/recluster-sync/internal/webhook"
 )
 
-var (
-	scheme = runtime.NewScheme()
-)
+/* -------------------------------------------------------------------------- */
+/*                               scheme wiring                                */
+/* -------------------------------------------------------------------------- */
+
+var scheme = runtime.NewScheme()
 
 func init() {
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(reclusterv1alpha1.AddToScheme(scheme))
-	// +kubebuilder:scaffold:scheme
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))    // core + apps, rbac …
+	utilruntime.Must(reclusterv1alpha1.AddToScheme(scheme)) // our CRDs
+	// +kubebuilder:scaffold:scheme                                // keep hook
 }
 
+/* -------------------------------------------------------------------------- */
+
 func main() {
-	log := ctrl.Log.WithName("setup 35")
-
-	/* ------------------------- CLI flags -------------------------- */
-
-	var (
-		metricsAddr                                      string
-		metricsCertPath, metricsCertName, metricsCertKey string
-		webhookCertPath, webhookCertName, webhookCertKey string
-		enableLeaderElection, secureMetrics, enableHTTP2 bool
-		probeAddr                                        string
-	)
-
-	flag.StringVar(&metricsAddr, "metrics-bind-address", "0",
-		"The address the metrics endpoint binds to (':8080', ':8443', or '0' to disable).")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081",
-		"The address the health/ready probe binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager.")
-	flag.BoolVar(&secureMetrics, "metrics-secure", true,
-		"Serve metrics via HTTPS. Use --metrics-secure=false for HTTP.")
-	flag.BoolVar(&enableHTTP2, "enable-http2", false,
-		"Enable HTTP/2 for webhook & metrics servers (disabled by default).")
-
-	flag.StringVar(&webhookCertPath, "webhook-cert-path", "", "Directory that contains webhook cert.")
-	flag.StringVar(&webhookCertName, "webhook-cert-name", "tls.crt", "Webhook certificate file.")
-	flag.StringVar(&webhookCertKey, "webhook-cert-key", "tls.key", "Webhook key file.")
-	flag.StringVar(&metricsCertPath, "metrics-cert-path", "", "Directory that contains metrics cert.")
-	flag.StringVar(&metricsCertName, "metrics-cert-name", "tls.crt", "Metrics certificate file.")
-	flag.StringVar(&metricsCertKey, "metrics-cert-key", "tls.key", "Metrics key file.")
+	/* ======================= CLI flags & logger ======================== */
 
 	opts := zap.Options{Development: true}
 	opts.BindFlags(flag.CommandLine)
+
+	var (
+		metricsAddr   string
+		probeAddr     string
+		enableLeader  bool
+		secureMetrics bool
+		enableHTTP2   bool
+
+		webhookCertPath, webhookCertName, webhookCertKey string
+		metricsCertPath, metricsCertName, metricsCertKey string
+	)
+
+	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "':8080', ':8443' or '0' (disabled)")
+	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "liveness / readiness probe address")
+
+	flag.BoolVar(&enableLeader, "leader-elect", false, "Elect a single active manager")
+	flag.BoolVar(&secureMetrics, "metrics-secure", true, "Serve metrics over HTTPS")
+	flag.BoolVar(&enableHTTP2, "enable-http2", false, "Opt-in to HTTP/2 (off by default)")
+
+	// optional TLS cert locations
+	flag.StringVar(&webhookCertPath, "webhook-cert-path", "", "Dir containing webhook cert/key")
+	flag.StringVar(&webhookCertName, "webhook-cert-name", "tls.crt", "Webhook cert filename")
+	flag.StringVar(&webhookCertKey, "webhook-cert-key", "tls.key", "Webhook key filename")
+	flag.StringVar(&metricsCertPath, "metrics-cert-path", "", "Dir containing metrics cert/key")
+	flag.StringVar(&metricsCertName, "metrics-cert-name", "tls.crt", "Metrics cert filename")
+	flag.StringVar(&metricsCertKey, "metrics-cert-key", "tls.key", "Metrics key filename")
+
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	log := ctrl.Log.WithName("bootstrap")
+	log.Info("recluster-sync controller-manager starting v 0.6")
 
-	/* ----------------- TLS helper to disable HTTP/2 ---------------- */
+	log.Info("parsed CLI flags",
+		"metrics", metricsAddr, "probe", probeAddr,
+		"secureMetrics", secureMetrics, "http2", enableHTTP2,
+		"leaderElection", enableLeader)
+
+	/* ======================= HTTP/2 hardening ========================= */
 
 	var tlsOpts []func(*tls.Config)
 	if !enableHTTP2 {
 		tlsOpts = append(tlsOpts, func(c *tls.Config) {
-			log.Info("HTTP/2 disabled for webhook & metrics servers")
 			c.NextProtos = []string{"http/1.1"}
 		})
+		log.Info("HTTP/2 is disabled to protect against Rapid-Reset class CVEs")
 	}
 
-	/* ---------------- Cert watchers (optional) -------------------- */
+	/* ================= Optional cert hot-reloaders ==================== */
 
-	var metricsCertWatcher, webhookCertWatcher *certwatcher.CertWatcher
+	var webhookWatcher, metricsWatcher *certwatcher.CertWatcher
 	if webhookCertPath != "" {
-		var err error
-		webhookCertWatcher, err = certwatcher.New(
+		w, err := certwatcher.New(
 			filepath.Join(webhookCertPath, webhookCertName),
-			filepath.Join(webhookCertPath, webhookCertKey),
-		)
+			filepath.Join(webhookCertPath, webhookCertKey))
 		if err != nil {
-			log.Error(err, "unable to initialize webhook certificate watcher")
+			log.Error(err, "cannot start webhook cert-watcher")
 			os.Exit(1)
 		}
-		tlsOpts = append(tlsOpts, func(cfg *tls.Config) {
-			cfg.GetCertificate = webhookCertWatcher.GetCertificate
-		})
+		webhookWatcher = w
+		tlsOpts = append(tlsOpts, func(cfg *tls.Config) { cfg.GetCertificate = w.GetCertificate })
+		log.Info("webhook certificate watcher initialised")
 	}
 
-	webhookServer := webhook.NewServer(webhook.Options{TLSOpts: tlsOpts})
+	webhookSrv := webhook.NewServer(webhook.Options{
+		Port:    9443,
+		CertDir: "/tmp/k8s-webhook-server/serving-certs",
+	})
 
-	metricsSrvOpts := metricsserver.Options{
+	metricsOpts := metricsserver.Options{
 		BindAddress:   metricsAddr,
 		SecureServing: secureMetrics,
 		TLSOpts:       tlsOpts,
 	}
 	if secureMetrics {
-		metricsSrvOpts.FilterProvider = filters.WithAuthenticationAndAuthorization
+		metricsOpts.FilterProvider = filters.WithAuthenticationAndAuthorization
 		if metricsCertPath != "" {
-			var err error
-			metricsCertWatcher, err = certwatcher.New(
+			w, err := certwatcher.New(
 				filepath.Join(metricsCertPath, metricsCertName),
-				filepath.Join(metricsCertPath, metricsCertKey),
-			)
+				filepath.Join(metricsCertPath, metricsCertKey))
 			if err != nil {
-				log.Error(err, "unable to init metrics cert watcher")
+				log.Error(err, "cannot start metrics cert-watcher")
 				os.Exit(1)
 			}
-			metricsSrvOpts.TLSOpts = append(metricsSrvOpts.TLSOpts,
-				func(c *tls.Config) { c.GetCertificate = metricsCertWatcher.GetCertificate })
+			metricsWatcher = w
+			metricsOpts.TLSOpts = append(metricsOpts.TLSOpts, func(cfg *tls.Config) {
+				cfg.GetCertificate = w.GetCertificate
+			})
+			log.Info("metrics certificate watcher initialised")
 		}
 	}
 
-	/* ----------------------- Manager ------------------------------------ */
+	/* ======================== controller-manager ====================== */
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
-		Metrics:                metricsSrvOpts,
-		WebhookServer:          webhookServer,
-		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
+		LeaderElection:         enableLeader,
 		LeaderElectionID:       "0274e017.recluster.com",
+		Metrics:                metricsOpts,
+		WebhookServer:          webhookSrv,
+		HealthProbeBindAddress: probeAddr,
 	})
 	if err != nil {
-		log.Error(err, "unable to start manager")
+		log.Error(err, "cannot build controller-manager")
 		os.Exit(1)
 	}
+	log.Info("controller-manager created")
+	webhookSrv.Register("/mutate-v1-pod", &webhook.Admission{Handler: &wh.GateInjector{}})
 
-	/* ---------------- ----- State cache (Task 4) ------------------------- */
+	/* ======================= live-state cache ========================= */
 
 	st, err := state.New(ctrl.GetConfigOrDie())
 	if err != nil {
-		log.Error(err, "unable to create live state cache")
+		log.Error(err, "cannot initialise live state cache")
 		os.Exit(1)
 	}
-	// Add as Runnable → manager will call Start(ctx)
 	if err := mgr.Add(st); err != nil {
-		log.Error(err, "unable to add state cache to manager")
+		log.Error(err, "cannot add state cache to manager")
+		os.Exit(1)
+	}
+	log.Info("live state cache registered")
+	// 1. Pick backend from env injected by Helm
+	mode := os.Getenv("RECLUSTER_BACKEND_MODE") // kwok | prod | test
+	be, err := backend.New(mode, kubernetes.NewForConfigOrDie(ctrl.GetConfigOrDie()))
+	if err != nil {
+		log.Error(err, "invalid backend mode")
 		os.Exit(1)
 	}
 
-	/* ---------------------- Controllers --------------------------------- */
-
-	if err = (&controller.RcnodeReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		State:  st, // *** NEW – inject live cache ***
-	}).SetupWithManager(mgr); err != nil {
-		log.Error(err, "unable to create Rcnode controller")
+	// 2. RcNode controller gets the backend
+	if err := controller.NewRcNodeReconciler(mgr, be).SetupWithManager(mgr); err != nil {
+		log.Error(err, "cannot set up RcNode controller")
 		os.Exit(1)
 	}
-	// +kubebuilder:scaffold:builder
 
-	/* -------------- Add cert watchers to manager (optional) ------------- */
+	// 3. (unchanged) add PodReconciler and Planner
+	if err := controller.NewPodReconciler(mgr).SetupWithManager(mgr); err != nil {
+		log.Error(err, "cannot set up Pod controller")
+		os.Exit(1)
+	}
 
-	if metricsCertWatcher != nil {
-		if err := mgr.Add(metricsCertWatcher); err != nil {
-			log.Error(err, "unable to add metrics cert watcher")
+	//GET cooldown from env, default to 5 seconds
+	cooldown := os.Getenv("RECLUSTER_PLANNER_COOLDOWN")
+	if cooldown == "" {
+		cooldown = "5" // default cooldown
+	}
+	cooldownInt, err := strconv.Atoi(cooldown)
+
+	log.Info("cooldown for planner set to", "seconds", cooldownInt)
+
+	// if err := mgr.Add(graph.NewPlanner(mgr, st, cooldownInt)); err != nil {
+	// 	log.Error(err, "cannot add planner runnable")
+	// 	os.Exit(1)
+	// }
+	/* =================== extra runnables (certs) ===================== */
+
+	if metricsWatcher != nil {
+		if err := mgr.Add(metricsWatcher); err != nil {
+			log.Error(err, "adding metrics cert-watcher failed")
 			os.Exit(1)
 		}
+		log.Info("metrics cert-watcher added to manager")
 	}
-	if webhookCertWatcher != nil {
-		if err := mgr.Add(webhookCertWatcher); err != nil {
-			log.Error(err, "unable to add webhook cert watcher")
+	if webhookWatcher != nil {
+		if err := mgr.Add(webhookWatcher); err != nil {
+			log.Error(err, "adding webhook cert-watcher failed")
 			os.Exit(1)
 		}
+		log.Info("webhook cert-watcher added to manager")
 	}
 
-	/* ---------------- health / ready probes ----------------------------- */
+	/* ===================== probes & startup ========================== */
 
-	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		log.Error(err, "unable to set up health check")
-		os.Exit(1)
-	}
-	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		log.Error(err, "unable to set up ready check")
-		os.Exit(1)
-	}
+	utilruntime.Must(mgr.AddHealthzCheck("healthz", healthz.Ping))
+	utilruntime.Must(mgr.AddReadyzCheck("readyz", healthz.Ping))
+	log.Info("health & readiness probes registered")
 
-	/* --------------------------- GO! ------------------------------------ */
-
-	log.Info("starting manager")
+	log.Info("starting controller-manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		log.Error(err, "problem running manager")
+		log.Error(err, "manager runtime exited")
 		os.Exit(1)
 	}
 }
